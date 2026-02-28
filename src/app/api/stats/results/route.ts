@@ -3,10 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, getClientId } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
-  const { allowed } = checkRateLimit(
-    `results:${getClientId(request)}`,
-    { limit: 30, windowMs: 60_000 },
-  )
+  const { allowed } = checkRateLimit(`results:${getClientId(request)}`, {
+    limit: 30,
+    windowMs: 60_000,
+  })
   if (!allowed) {
     return NextResponse.json(
       { error: 'Too many requests' },

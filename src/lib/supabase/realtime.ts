@@ -13,10 +13,7 @@ export interface TypingUpdatePayload {
  * Creates a Supabase Realtime broadcast channel for a specific game round.
  * Used for live typing progress updates between players.
  */
-export function createRoundChannel(
-  supabase: SupabaseClient,
-  roundId: string,
-): RealtimeChannel {
+export function createRoundChannel(supabase: SupabaseClient, roundId: string): RealtimeChannel {
   return supabase.channel(`round:${roundId}`, {
     config: {
       broadcast: {
@@ -30,10 +27,7 @@ export function createRoundChannel(
  * Sends a typing progress update via broadcast.
  * Should be called through a throttle (~300ms) to avoid flooding.
  */
-export function sendTypingUpdate(
-  channel: RealtimeChannel,
-  payload: TypingUpdatePayload,
-) {
+export function sendTypingUpdate(channel: RealtimeChannel, payload: TypingUpdatePayload) {
   return channel.send({
     type: 'broadcast',
     event: 'typing_update',

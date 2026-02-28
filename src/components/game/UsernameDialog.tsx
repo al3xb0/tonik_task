@@ -57,7 +57,12 @@ export function UsernameDialog({ open, onSubmit, onClose, currentName }: Usernam
   return (
     <AnimatePresence>
       {open && (
-        <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            if (!v) onClose()
+          }}
+        >
           <DialogContent>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -82,9 +87,7 @@ export function UsernameDialog({ open, onSubmit, onClose, currentName }: Usernam
                     maxLength={MAX_LENGTH}
                     autoFocus
                   />
-                  {error && (
-                    <p className="text-sm text-red-500 mt-1">{error}</p>
-                  )}
+                  {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
                 </div>
                 <DialogFooter className="gap-2">
                   <Button type="button" variant="outline" onClick={onClose}>

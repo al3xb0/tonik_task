@@ -16,10 +16,7 @@ export function ModeSelector() {
   const disabled = phase === 'active'
 
   return (
-    <Tabs
-      value={selectedMode}
-      onValueChange={(value) => setSelectedMode(value as GameMode)}
-    >
+    <Tabs value={selectedMode} onValueChange={(value) => setSelectedMode(value as GameMode)}>
       <TabsList>
         {MODES.map(({ value, label }) => (
           <TabsTrigger key={value} value={value} disabled={disabled}>

@@ -104,9 +104,7 @@ export function GamePage() {
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="game">Game</TabsTrigger>
-            {!isAnonymous && (
-              <TabsTrigger value="stats">My Stats</TabsTrigger>
-            )}
+            {!isAnonymous && <TabsTrigger value="stats">My Stats</TabsTrigger>}
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
           </TabsList>
 

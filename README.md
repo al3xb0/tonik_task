@@ -4,18 +4,18 @@ Real-time typing competition platform built with Next.js — a TypeRacer-style g
 
 ## Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript (strict mode) |
-| State | Zustand |
-| Backend / Realtime | Supabase (Realtime Broadcast + Postgres) |
-| UI | shadcn/ui + Tailwind CSS |
-| Animations | Framer Motion |
-| URL state | nuqs |
-| Auth | Supabase Auth (Anonymous + Username upgrade) |
-| Tests | Vitest + React Testing Library |
-| Linting | ESLint + Prettier |
+| Layer              | Technology                                   |
+| ------------------ | -------------------------------------------- |
+| Framework          | Next.js 16 (App Router)                      |
+| Language           | TypeScript (strict mode)                     |
+| State              | Zustand                                      |
+| Backend / Realtime | Supabase (Realtime Broadcast + Postgres)     |
+| UI                 | shadcn/ui + Tailwind CSS                     |
+| Animations         | Framer Motion                                |
+| URL state          | nuqs                                         |
+| Auth               | Supabase Auth (Anonymous + Username upgrade) |
+| Tests              | Vitest + React Testing Library               |
+| Linting            | ESLint + Prettier                            |
 
 ## Getting Started
 

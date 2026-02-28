@@ -21,7 +21,7 @@ interface AuthDialogProps {
   playerName?: string
 }
 
-export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
+export function AuthDialog({ isAnonymous }: AuthDialogProps) {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
@@ -67,10 +67,7 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
         } = await supabase.auth.getUser()
 
         if (user) {
-          await supabase
-            .from('players')
-            .update({ is_anonymous: false })
-            .eq('id', user.id)
+          await supabase.from('players').update({ is_anonymous: false }).eq('id', user.id)
         }
 
         toast.success('Account created!')
@@ -130,9 +127,7 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
         <DialogContent>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <DialogTitle>
-                {mode === 'login' ? 'Login' : 'Create Account'}
-              </DialogTitle>
+              <DialogTitle>{mode === 'login' ? 'Login' : 'Create Account'}</DialogTitle>
               <DialogDescription>
                 {mode === 'login'
                   ? 'Sign in to your existing account.'
@@ -169,11 +164,7 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
                   : 'Already have an account? Login'}
               </button>
               <Button type="submit" disabled={submitting}>
-                {submitting
-                  ? 'Please wait...'
-                  : mode === 'login'
-                    ? 'Login'
-                    : 'Register'}
+                {submitting ? 'Please wait...' : mode === 'login' ? 'Login' : 'Register'}
               </Button>
             </DialogFooter>
           </form>

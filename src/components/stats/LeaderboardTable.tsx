@@ -55,14 +55,8 @@ export function LeaderboardTable() {
     'lbOrder',
     parseAsStringLiteral(sortOrders).withDefault('desc'),
   )
-  const [pageSize, setPageSize] = useQueryState(
-    'lbPageSize',
-    parseAsInteger.withDefault(10),
-  )
-  const [page, setPage] = useQueryState(
-    'lbPage',
-    parseAsInteger.withDefault(1),
-  )
+  const [pageSize, setPageSize] = useQueryState('lbPageSize', parseAsInteger.withDefault(10))
+  const [page, setPage] = useQueryState('lbPage', parseAsInteger.withDefault(1))
 
   const fetchLeaderboard = async () => {
     setLoading(true)
@@ -70,7 +64,7 @@ export function LeaderboardTable() {
       const res = await fetch('/api/stats/leaderboard?limit=100')
       if (res.ok) {
         const body = await res.json()
-        setEntries(Array.isArray(body) ? body : body.items ?? [])
+        setEntries(Array.isArray(body) ? body : (body.items ?? []))
       }
     } catch {
       // silently fail
@@ -151,31 +145,56 @@ export function LeaderboardTable() {
           <TableRow>
             <TableHead className="w-12 text-center">#</TableHead>
             <TableHead>
-              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit" onClick={() => handleSort('name')} aria-label={`Sort by name ${sort === 'name' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit"
+                onClick={() => handleSort('name')}
+                aria-label={`Sort by name ${sort === 'name' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
                 Player
                 <SortIcon active={sort === 'name'} order={order} />
               </button>
             </TableHead>
             <TableHead className="text-right">
-              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('bestWpm')} aria-label={`Sort by best WPM ${sort === 'bestWpm' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto"
+                onClick={() => handleSort('bestWpm')}
+                aria-label={`Sort by best WPM ${sort === 'bestWpm' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
                 Best WPM
                 <SortIcon active={sort === 'bestWpm'} order={order} />
               </button>
             </TableHead>
             <TableHead className="text-right">
-              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('avgWpm')} aria-label={`Sort by average WPM ${sort === 'avgWpm' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto"
+                onClick={() => handleSort('avgWpm')}
+                aria-label={`Sort by average WPM ${sort === 'avgWpm' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
                 Avg WPM
                 <SortIcon active={sort === 'avgWpm'} order={order} />
               </button>
             </TableHead>
             <TableHead className="text-right">
-              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('avgAccuracy')} aria-label={`Sort by average accuracy ${sort === 'avgAccuracy' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto"
+                onClick={() => handleSort('avgAccuracy')}
+                aria-label={`Sort by average accuracy ${sort === 'avgAccuracy' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
                 Avg Accuracy
                 <SortIcon active={sort === 'avgAccuracy'} order={order} />
               </button>
             </TableHead>
             <TableHead className="text-right">
-              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('gamesPlayed')} aria-label={`Sort by games played ${sort === 'gamesPlayed' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto"
+                onClick={() => handleSort('gamesPlayed')}
+                aria-label={`Sort by games played ${sort === 'gamesPlayed' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
                 Games
                 <SortIcon active={sort === 'gamesPlayed'} order={order} />
               </button>
@@ -193,36 +212,30 @@ export function LeaderboardTable() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.03 }}
                 className={`border-b transition-colors ${
-                  isMe
-                    ? 'bg-primary/5 hover:bg-primary/10'
-                    : 'hover:bg-muted/50'
+                  isMe ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'
                 }`}
               >
                 <TableCell className="text-center font-mono tabular-nums">
                   {rank <= 3 ? (
-                    <span className="text-lg">
-                      {rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}
-                    </span>
+                    <span className="text-lg">{rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}</span>
                   ) : (
                     <span className="text-muted-foreground">{rank}</span>
                   )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <span className={isMe ? 'font-semibold' : ''}>
-                      {entry.playerName}
-                    </span>
+                    <span className={isMe ? 'font-semibold' : ''}>{entry.playerName}</span>
                     {isMe && (
-                      <Badge variant="secondary" className="text-xs">You</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        You
+                      </Badge>
                     )}
                   </div>
                 </TableCell>
                 <TableCell className="text-right font-mono tabular-nums font-bold">
                   {entry.bestWpm}
                 </TableCell>
-                <TableCell className="text-right font-mono tabular-nums">
-                  {entry.avgWpm}
-                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{entry.avgWpm}</TableCell>
                 <TableCell className="text-right font-mono tabular-nums">
                   {(entry.avgAccuracy * 100).toFixed(1)}%
                 </TableCell>
@@ -236,7 +249,9 @@ export function LeaderboardTable() {
       </Table>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>{entries.length} player{entries.length !== 1 && 's'}</span>
+        <span>
+          {entries.length} player{entries.length !== 1 && 's'}
+        </span>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setPage(Math.max(1, safePage - 1))}
@@ -257,7 +272,10 @@ export function LeaderboardTable() {
           </button>
           <Select
             value={String(pageSize)}
-            onValueChange={(v) => { setPageSize(parseInt(v, 10)); setPage(1) }}
+            onValueChange={(v) => {
+              setPageSize(parseInt(v, 10))
+              setPage(1)
+            }}
           >
             <SelectTrigger className="w-17.5 h-8">
               <SelectValue />

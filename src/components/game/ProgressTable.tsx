@@ -76,14 +76,8 @@ export function ProgressTable() {
     'order',
     parseAsStringLiteral(sortOrders).withDefault('desc'),
   )
-  const [pageSize, setPageSize] = useQueryState(
-    'pageSize',
-    parseAsInteger.withDefault(10),
-  )
-  const [page, setPage] = useQueryState(
-    'page',
-    parseAsInteger.withDefault(1),
-  )
+  const [pageSize, setPageSize] = useQueryState('pageSize', parseAsInteger.withDefault(10))
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
 
   const handleSort = (column: SortColumn) => {
     if (sort === column) {
@@ -182,9 +176,7 @@ export function ProgressTable() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                   className={`border-b transition-colors ${
-                    isMe
-                      ? 'bg-primary/5 hover:bg-primary/10'
-                      : 'hover:bg-muted/50'
+                    isMe ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/50'
                   }`}
                 >
                   <TableCell className="py-3 hidden sm:table-cell">
@@ -207,9 +199,7 @@ export function ProgressTable() {
                   </TableCell>
                   <TableCell className="py-3">
                     <div className="flex items-center gap-2">
-                      <span className={isMe ? 'font-semibold' : ''}>
-                        {c.player.name}
-                      </span>
+                      <span className={isMe ? 'font-semibold' : ''}>{c.player.name}</span>
                       {isMe && (
                         <Badge variant="secondary" className="text-xs">
                           You
@@ -222,9 +212,7 @@ export function ProgressTable() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="py-3 text-right font-mono tabular-nums">
-                    {c.wpm}
-                  </TableCell>
+                  <TableCell className="py-3 text-right font-mono tabular-nums">{c.wpm}</TableCell>
                   <TableCell className="py-3 text-right font-mono tabular-nums">
                     {(c.accuracy * 100).toFixed(1)}%
                   </TableCell>
@@ -259,7 +247,10 @@ export function ProgressTable() {
           </button>
           <Select
             value={String(pageSize)}
-            onValueChange={(v) => { setPageSize(parseInt(v, 10)); setPage(1) }}
+            onValueChange={(v) => {
+              setPageSize(parseInt(v, 10))
+              setPage(1)
+            }}
           >
             <SelectTrigger className="w-17.5 h-8">
               <SelectValue />

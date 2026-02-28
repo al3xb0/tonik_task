@@ -17,7 +17,8 @@ vi.mock('framer-motion', async () => {
     motion: {
       ...actual.motion,
       tr: (props: React.HTMLAttributes<HTMLTableRowElement> & { layout?: boolean }) => {
-        const { layout: _, ...rest } = props
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { layout: _layout, ...rest } = props
         return <tr {...rest} />
       },
       div: (props: React.HTMLAttributes<HTMLDivElement>) => <div {...props} />,

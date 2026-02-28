@@ -62,21 +62,16 @@ export function TypingInput() {
   const targetText = currentRound?.sentenceText ?? ''
   const isActive = phase === 'active'
 
-  const {
-    typedText,
-    charStates,
-    wpm,
-    accuracy,
-    isCompleted,
-    handleInput,
-    reset,
-  } = useTypingMetrics({ targetText, enabled: isActive })
+  const { typedText, charStates, wpm, accuracy, isCompleted, handleInput, reset } =
+    useTypingMetrics({ targetText, enabled: isActive })
+
+  const roundId = currentRound?.id
 
   useEffect(() => {
-    if (!currentRound) return
+    if (!roundId) return
 
     const supabase = createClient()
-    const channel = createRoundChannel(supabase, currentRound.id)
+    const channel = createRoundChannel(supabase, roundId)
     channel.subscribe((status, err) => {
       if (status === 'CHANNEL_ERROR') {
         console.error('TypingInput channel error:', err)
@@ -88,10 +83,22 @@ export function TypingInput() {
       supabase.removeChannel(channel)
       channelRef.current = null
     }
-  }, [currentRound?.id])
+  }, [roundId])
 
-  const throttledBroadcast = useRef(
-    throttle(
+  const throttledBroadcastRef = useRef<
+    | (((payload: {
+        playerId: string
+        playerName: string
+        typedText: string
+        wpm: number
+        accuracy: number
+        isCompleted: boolean
+      }) => void) & { cancel: () => void })
+    | null
+  >(null)
+
+  useEffect(() => {
+    const fn = throttle(
       (payload: {
         playerId: string
         playerName: string
@@ -105,14 +112,9 @@ export function TypingInput() {
         }
       },
       300,
-    ),
-  ).current
-
-  useEffect(() => {
-    const broadcast = throttledBroadcast
-    return () => {
-      broadcast.cancel()
-    }
+    )
+    throttledBroadcastRef.current = fn
+    return () => fn.cancel()
   }, [])
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export function TypingInput() {
       isCompleted,
     })
 
-    throttledBroadcast({
+    throttledBroadcastRef.current?.({
       playerId: localPlayer.id,
       playerName: localPlayer.name,
       typedText,
@@ -135,54 +137,66 @@ export function TypingInput() {
       accuracy,
       isCompleted,
     })
-  }, [typedText, wpm, accuracy, isCompleted, localPlayer, isActive, upsertCompetitor, throttledBroadcast])
+  }, [
+    typedText,
+    wpm,
+    accuracy,
+    isCompleted,
+    localPlayer,
+    isActive,
+    upsertCompetitor,
+  ])
 
   useEffect(() => {
-    if (!isCompleted || !currentRound || !localPlayer || resultSavedRef.current)
-      return
+    if (!isCompleted || !currentRound || !localPlayer || resultSavedRef.current) return
 
     resultSavedRef.current = true
     toast.success('You completed the round!', { duration: 3000 })
     const supabase = createClient()
-    supabase.from('round_results').upsert(
-      {
-        round_id: currentRound.id,
-        player_id: localPlayer.id,
-        wpm: Math.round(wpm),
-        accuracy: parseFloat(accuracy.toFixed(4)),
-        completed: true,
-      },
-      { onConflict: 'round_id,player_id' },
-    ).then(({ error }: { error: unknown }) => {
-      if (error) console.error('Failed to save result:', error)
-    })
+    supabase
+      .from('round_results')
+      .upsert(
+        {
+          round_id: currentRound.id,
+          player_id: localPlayer.id,
+          wpm: Math.round(wpm),
+          accuracy: parseFloat(accuracy.toFixed(4)),
+          completed: true,
+        },
+        { onConflict: 'round_id,player_id' },
+      )
+      .then(({ error }: { error: unknown }) => {
+        if (error) console.error('Failed to save result:', error)
+      })
   }, [isCompleted, currentRound, localPlayer, wpm, accuracy])
 
   useEffect(() => {
-    if (phase !== 'results' || !currentRound || !localPlayer || resultSavedRef.current)
-      return
+    if (phase !== 'results' || !currentRound || !localPlayer || resultSavedRef.current) return
     if (typedText.length === 0) return
 
     resultSavedRef.current = true
     const supabase = createClient()
-    supabase.from('round_results').upsert(
-      {
-        round_id: currentRound.id,
-        player_id: localPlayer.id,
-        wpm: Math.round(wpm),
-        accuracy: parseFloat(accuracy.toFixed(4)),
-        completed: isCompleted,
-      },
-      { onConflict: 'round_id,player_id' },
-    ).then(({ error }: { error: unknown }) => {
-      if (error) console.error('Failed to save timeout result:', error)
-    })
-  }, [phase])
+    supabase
+      .from('round_results')
+      .upsert(
+        {
+          round_id: currentRound.id,
+          player_id: localPlayer.id,
+          wpm: Math.round(wpm),
+          accuracy: parseFloat(accuracy.toFixed(4)),
+          completed: isCompleted,
+        },
+        { onConflict: 'round_id,player_id' },
+      )
+      .then(({ error }: { error: unknown }) => {
+        if (error) console.error('Failed to save timeout result:', error)
+      })
+  }, [phase, currentRound, localPlayer, typedText, wpm, accuracy, isCompleted])
 
   useEffect(() => {
     resultSavedRef.current = false
     reset()
-  }, [currentRound?.id])
+  }, [roundId, reset])
 
   useEffect(() => {
     if (isActive && textareaRef.current) {
@@ -201,15 +215,18 @@ export function TypingInput() {
   }
 
   return (
-    <div className="relative w-full" data-testid="typing-input" role="region" aria-label="Typing area">
+    <div
+      className="relative w-full"
+      data-testid="typing-input"
+      role="region"
+      aria-label="Typing area"
+    >
       <div
         className="rounded-lg border bg-card p-4 sm:p-6 font-mono text-base sm:text-lg leading-relaxed cursor-text min-h-30 select-none"
         onClick={handleOverlayClick}
         aria-hidden="true"
       >
-        {!targetText && (
-          <span className="text-muted-foreground">Waiting for round...</span>
-        )}
+        {!targetText && <span className="text-muted-foreground">Waiting for round...</span>}
         {targetText.split('').map((char, i) => {
           const state = charStates[i] ?? 'pending'
           return (

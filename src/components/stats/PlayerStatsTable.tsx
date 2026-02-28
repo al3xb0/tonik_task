@@ -55,6 +55,7 @@ function formatDate(dateStr: string): string {
 
 export function PlayerStatsTable() {
   const { localPlayer } = usePlayerStore()
+  const localPlayerId = localPlayer?.id
   const [stats, setStats] = useState<PlayerStat[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -66,22 +67,16 @@ export function PlayerStatsTable() {
     'statOrder',
     parseAsStringLiteral(sortOrders).withDefault('desc'),
   )
-  const [pageSize, setPageSize] = useQueryState(
-    'statPageSize',
-    parseAsInteger.withDefault(10),
-  )
-  const [page, setPage] = useQueryState(
-    'statPage',
-    parseAsInteger.withDefault(1),
-  )
+  const [pageSize, setPageSize] = useQueryState('statPageSize', parseAsInteger.withDefault(10))
+  const [page, setPage] = useQueryState('statPage', parseAsInteger.withDefault(1))
 
   useEffect(() => {
-    if (!localPlayer) return
+    if (!localPlayerId) return
 
     const fetchStats = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`/api/stats/player?playerId=${localPlayer.id}`)
+        const res = await fetch(`/api/stats/player?playerId=${localPlayerId}`)
         if (res.ok) {
           setStats(await res.json())
         }
@@ -93,7 +88,7 @@ export function PlayerStatsTable() {
     }
 
     fetchStats()
-  }, [localPlayer?.id])
+  }, [localPlayerId])
 
   const handleSort = (column: StatSortColumn) => {
     if (sort === column) {
@@ -130,9 +125,11 @@ export function PlayerStatsTable() {
   const safePage = Math.min(page, totalPages)
   const paginated = sorted.slice((safePage - 1) * pageSize, safePage * pageSize)
 
-  const avgWpm = stats.length > 0 ? Math.round(stats.reduce((s, r) => s + r.wpm, 0) / stats.length) : 0
+  const avgWpm =
+    stats.length > 0 ? Math.round(stats.reduce((s, r) => s + r.wpm, 0) / stats.length) : 0
   const bestWpm = stats.length > 0 ? Math.max(...stats.map((r) => r.wpm)) : 0
-  const avgAccuracy = stats.length > 0 ? (stats.reduce((s, r) => s + r.accuracy, 0) / stats.length) : 0
+  const avgAccuracy =
+    stats.length > 0 ? stats.reduce((s, r) => s + r.accuracy, 0) / stats.length : 0
   const completedCount = stats.filter((r) => r.completed).length
 
   if (loading) {
@@ -182,19 +179,31 @@ export function PlayerStatsTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('date')}>
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort('date')}
+                >
                   Date
                   <SortIcon active={sort === 'date'} order={order} />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('mode')}>
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort('mode')}
+                >
                   Mode
                   <SortIcon active={sort === 'mode'} order={order} />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none text-right" onClick={() => handleSort('wpm')}>
+                <TableHead
+                  className="cursor-pointer select-none text-right"
+                  onClick={() => handleSort('wpm')}
+                >
                   WPM
                   <SortIcon active={sort === 'wpm'} order={order} />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none text-right" onClick={() => handleSort('accuracy')}>
+                <TableHead
+                  className="cursor-pointer select-none text-right"
+                  onClick={() => handleSort('accuracy')}
+                >
                   Accuracy
                   <SortIcon active={sort === 'accuracy'} order={order} />
                 </TableHead>
@@ -250,7 +259,10 @@ export function PlayerStatsTable() {
               </button>
               <Select
                 value={String(pageSize)}
-                onValueChange={(v) => { setPageSize(parseInt(v, 10)); setPage(1) }}
+                onValueChange={(v) => {
+                  setPageSize(parseInt(v, 10))
+                  setPage(1)
+                }}
               >
                 <SelectTrigger className="w-17.5 h-8">
                   <SelectValue />

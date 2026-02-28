@@ -22,9 +22,7 @@ export function RoundTimer() {
   if (phase === 'results') {
     return (
       <div className="flex flex-col items-center gap-2">
-        <span className="text-lg font-semibold text-muted-foreground">
-          Next round in 5...
-        </span>
+        <span className="text-lg font-semibold text-muted-foreground">Next round in 5...</span>
       </div>
     )
   }
@@ -32,9 +30,7 @@ export function RoundTimer() {
   if (phase === 'waiting' || !currentRound) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <span className="text-lg font-semibold text-muted-foreground">
-          Waiting for round...
-        </span>
+        <span className="text-lg font-semibold text-muted-foreground">Waiting for round...</span>
       </div>
     )
   }
@@ -48,11 +44,7 @@ export function RoundTimer() {
     <div className="flex flex-col items-center gap-2 w-full max-w-md">
       <motion.span
         key={timeLeft}
-        animate={
-          isBouncing
-            ? { scale: [1, 1.15, 1], transition: { duration: 0.3 } }
-            : { scale: 1 }
-        }
+        animate={isBouncing ? { scale: [1, 1.15, 1], transition: { duration: 0.3 } } : { scale: 1 }}
         className={`text-3xl font-bold tabular-nums ${
           isUrgent ? 'text-red-500' : 'text-foreground'
         }`}
@@ -61,9 +53,7 @@ export function RoundTimer() {
       </motion.span>
       <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
         <motion.div
-          className={`h-full rounded-full ${
-            isUrgent ? 'bg-red-500' : 'bg-primary'
-          }`}
+          className={`h-full rounded-full ${isUrgent ? 'bg-red-500' : 'bg-primary'}`}
           initial={false}
           animate={{ width: `${progress * 100}%` }}
           transition={{ duration: 0.5, ease: 'linear' }}

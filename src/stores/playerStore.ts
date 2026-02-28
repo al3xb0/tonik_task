@@ -8,7 +8,9 @@ interface PlayerStore {
   tableSort: TableState
 
   setLocalPlayer: (player: Player) => void
-  upsertCompetitor: (update: { playerId: string } & Partial<Omit<Competitor, 'player'>> & { playerName?: string }) => void
+  upsertCompetitor: (
+    update: { playerId: string } & Partial<Omit<Competitor, 'player'>> & { playerName?: string },
+  ) => void
   removeCompetitor: (playerId: string) => void
   setTableSort: (sort: Partial<TableState>) => void
   clearCompetitors: () => void
@@ -32,9 +34,7 @@ export const usePlayerStore = create<PlayerStore>()(
 
       upsertCompetitor: (update) =>
         set((state) => {
-          const existingIndex = state.competitors.findIndex(
-            (c) => c.player.id === update.playerId,
-          )
+          const existingIndex = state.competitors.findIndex((c) => c.player.id === update.playerId)
 
           if (existingIndex >= 0) {
             const updated = [...state.competitors]

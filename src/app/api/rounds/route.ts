@@ -16,10 +16,10 @@ function getRandomBaseMode(): GameMode {
 }
 
 export async function GET(request: Request) {
-  const { allowed, remaining } = checkRateLimit(
-    `rounds:${getClientId(request)}`,
-    { limit: 30, windowMs: 60_000 },
-  )
+  const { allowed } = checkRateLimit(`rounds:${getClientId(request)}`, {
+    limit: 30,
+    windowMs: 60_000,
+  })
   if (!allowed) {
     return NextResponse.json(
       { error: 'Too many requests' },
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const mode = (searchParams.get('mode') as GameMode) || 'sentences'
 
-  const { data: activeRound, error: activeError } = await supabase
+  const { data: activeRound } = await supabase
     .from('game_rounds')
     .select('id, sentence_id, mode, started_at, ended_at')
     .gt('ended_at', new Date().toISOString())

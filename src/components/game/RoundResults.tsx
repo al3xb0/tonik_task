@@ -53,7 +53,7 @@ export function RoundResults() {
     }
 
     fetchResults()
-  }, [phase, currentRound?.id])
+  }, [phase, currentRound])
 
   if (phase !== 'results') return null
 
@@ -111,9 +111,7 @@ export function RoundResults() {
       </motion.h2>
 
       {results.length === 0 && loaded && (
-        <p className="text-center text-muted-foreground text-sm">
-          No results for this round yet.
-        </p>
+        <p className="text-center text-muted-foreground text-sm">No results for this round yet.</p>
       )}
 
       <div className="flex items-end justify-center gap-3 py-4">
@@ -152,7 +150,9 @@ export function RoundResults() {
                 </motion.span>
 
                 <div className="text-center mb-2">
-                  <p className={`text-sm font-medium truncate max-w-25 ${isMe ? 'text-primary font-bold' : ''}`}>
+                  <p
+                    className={`text-sm font-medium truncate max-w-25 ${isMe ? 'text-primary font-bold' : ''}`}
+                  >
                     {entry.playerName}
                   </p>
                   {isMe && (
@@ -209,14 +209,12 @@ export function RoundResults() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground w-6 text-right font-mono">
-                    #{idx + 4}
-                  </span>
-                  <span className={isMe ? 'font-semibold' : ''}>
-                    {entry.playerName}
-                  </span>
+                  <span className="text-muted-foreground w-6 text-right font-mono">#{idx + 4}</span>
+                  <span className={isMe ? 'font-semibold' : ''}>{entry.playerName}</span>
                   {isMe && (
-                    <Badge variant="secondary" className="text-[10px]">You</Badge>
+                    <Badge variant="secondary" className="text-[10px]">
+                      You
+                    </Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-4 font-mono tabular-nums text-muted-foreground">

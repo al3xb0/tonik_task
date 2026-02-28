@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  calculateWPM,
-  calculateAccuracy,
-  getCharStates,
-  getCorrectWordCount,
-} from '../metrics'
+import { calculateWPM, calculateAccuracy, getCharStates, getCorrectWordCount } from '../metrics'
 
 describe('calculateWPM', () => {
   it('returns 0 when elapsed seconds is 0', () => {

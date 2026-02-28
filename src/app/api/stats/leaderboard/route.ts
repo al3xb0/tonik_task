@@ -3,10 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, getClientId } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
-  const { allowed } = checkRateLimit(
-    `leaderboard:${getClientId(request)}`,
-    { limit: 20, windowMs: 60_000 },
-  )
+  const { allowed } = checkRateLimit(`leaderboard:${getClientId(request)}`, {
+    limit: 20,
+    windowMs: 60_000,
+  })
   if (!allowed) {
     return NextResponse.json(
       { error: 'Too many requests' },
@@ -28,8 +28,10 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '20', 10) || 20, 1), 100)
   const offset = Math.max(parseInt(searchParams.get('offset') ?? '0', 10) || 0, 0)
 
-  const { data: aggregated, error } = await supabase
-    .rpc('get_leaderboard', { lim: limit, off: offset })
+  const { data: aggregated, error } = await supabase.rpc('get_leaderboard', {
+    lim: limit,
+    off: offset,
+  })
 
   if (error) {
     const { data: results, error: fallbackError } = await supabase

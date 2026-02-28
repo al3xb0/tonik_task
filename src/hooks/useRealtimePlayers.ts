@@ -12,19 +12,22 @@ export function useRealtimePlayers() {
   const channelRef = useRef<ReturnType<typeof createRoundChannel> | null>(null)
   const prevRoundIdRef = useRef<string | null>(null)
 
-  useEffect(() => {
-    if (!currentRound) return
+  const roundId = currentRound?.id
+  const localPlayerId = localPlayer?.id
 
-    if (prevRoundIdRef.current && prevRoundIdRef.current !== currentRound.id) {
+  useEffect(() => {
+    if (!roundId) return
+
+    if (prevRoundIdRef.current && prevRoundIdRef.current !== roundId) {
       clearCompetitors()
     }
-    prevRoundIdRef.current = currentRound.id
+    prevRoundIdRef.current = roundId
 
     const supabase = createClient()
-    const channel = createRoundChannel(supabase, currentRound.id)
+    const channel = createRoundChannel(supabase, roundId)
 
     onTypingUpdate(channel, (payload) => {
-      if (payload.playerId === localPlayer?.id) return
+      if (payload.playerId === localPlayerId) return
       upsertCompetitor({
         playerId: payload.playerId,
         playerName: payload.playerName,
@@ -48,11 +51,11 @@ export function useRealtimePlayers() {
       supabase.removeChannel(channel)
       channelRef.current = null
     }
-  }, [currentRound?.id])
+  }, [roundId, localPlayerId, clearCompetitors, upsertCompetitor])
 
   useEffect(() => {
     if (!currentRound) {
       clearCompetitors()
     }
-  }, [currentRound])
+  }, [currentRound, clearCompetitors])
 }

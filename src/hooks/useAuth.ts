@@ -45,9 +45,7 @@ async function loadPlayerFromDb(
       .eq('id', userId)
       .single()
 
-    return retried
-      ? { id: retried.id, name: retried.name, isAnonymous: isAnon }
-      : null
+    return retried ? { id: retried.id, name: retried.name, isAnonymous: isAnon } : null
   } catch (err) {
     console.error('loadPlayerFromDb error:', err)
     return null
@@ -64,11 +62,7 @@ export function useAuth() {
   const applyUser = useCallback(
     async (supabase: ReturnType<typeof createClient>, authUser: User) => {
       setUser(authUser)
-      const p = await loadPlayerFromDb(
-        supabase,
-        authUser.id,
-        authUser.is_anonymous ?? true,
-      )
+      const p = await loadPlayerFromDb(supabase, authUser.id, authUser.is_anonymous ?? true)
       if (p) {
         setPlayer(p)
         setLocalPlayer(p)
@@ -83,7 +77,9 @@ export function useAuth() {
 
     const init = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
         if (cancelledRef_inner.current) return
 
@@ -107,35 +103,31 @@ export function useAuth() {
       }
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session: Session | null) => {
-        if (cancelledRef_inner.current || !initDone.current) return
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      if (cancelledRef_inner.current || !initDone.current) return
 
-        if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setPlayer(null)
-          setLocalPlayer(null as unknown as Player)
-          return
-        }
+      if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setPlayer(null)
+        setLocalPlayer(null as unknown as Player)
+        return
+      }
 
-        if (session?.user) {
-          setUser(session.user)
-          // Fire-and-forget: don't block the auth lock with DB calls
-          loadPlayerFromDb(
-            supabase,
-            session.user.id,
-            session.user.is_anonymous ?? true,
-          )
-            .then((p) => {
-              if (p && !cancelledRef_inner.current) {
-                setPlayer(p)
-                setLocalPlayer(p)
-              }
-            })
-            .catch(console.error)
-        }
-      },
-    )
+      if (session?.user) {
+        setUser(session.user)
+        // Fire-and-forget: don't block the auth lock with DB calls
+        loadPlayerFromDb(supabase, session.user.id, session.user.is_anonymous ?? true)
+          .then((p) => {
+            if (p && !cancelledRef_inner.current) {
+              setPlayer(p)
+              setLocalPlayer(p)
+            }
+          })
+          .catch(console.error)
+      }
+    })
 
     init()
 
@@ -150,10 +142,7 @@ export function useAuth() {
       if (!user) return
 
       const supabase = createClient()
-      const { error } = await supabase
-        .from('players')
-        .update({ name })
-        .eq('id', user.id)
+      const { error } = await supabase.from('players').update({ name }).eq('id', user.id)
 
       if (!error) {
         const updated: Player = {
