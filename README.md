@@ -119,6 +119,14 @@ src/
 - **Dark mode toggle** (currently supports dark mode via system preference only)
 - **Internationalization (i18n)** for multi-language support
 
+## Assumptions & Simplifications
+
+- **Single-instance deployment**: The in-memory rate limiter and module-level singleton Supabase client assume a single Node.js process. For horizontal scaling, swap to Redis-based rate limiting and external session store.
+- **Anonymous-first auth**: Users start as anonymous Supabase users. This simplifies onboarding but means abandoned anonymous accounts accumulate over time — a cleanup job would be needed.
+- **Fixed round duration**: Rounds use a hardcoded 60-second timer. Configurable durations were out of scope.
+- **Client-side sorting & pagination**: Tables sort and paginate in-memory on the client. This works well for the expected data sizes (≤100 leaderboard entries, ≤50 competitors) but wouldn't scale to thousands of rows without server-side pagination.
+- **Realtime broadcast is fire-and-forget**: Typing updates sent via Supabase Broadcast have no delivery guarantee. A brief network hiccup may cause a competitor's progress to appear stale until the next update.
+
 ## License
 
 MIT

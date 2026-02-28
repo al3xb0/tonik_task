@@ -80,6 +80,10 @@ export function ProgressTable() {
     'pageSize',
     parseAsInteger.withDefault(10),
   )
+  const [page, setPage] = useQueryState(
+    'page',
+    parseAsInteger.withDefault(1),
+  )
 
   const handleSort = (column: SortColumn) => {
     if (sort === column) {
@@ -88,6 +92,7 @@ export function ProgressTable() {
       setSort(column)
       setOrder('desc')
     }
+    setPage(1)
   }
 
   const sorted = useMemo(
@@ -95,9 +100,12 @@ export function ProgressTable() {
     [competitors, sort, order, targetLength],
   )
 
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+
   const paginated = useMemo(
-    () => sorted.slice(0, pageSize),
-    [sorted, pageSize],
+    () => sorted.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [sorted, safePage, pageSize],
   )
 
   if (competitors.length === 0) {
@@ -232,10 +240,26 @@ export function ProgressTable() {
           {competitors.length} player{competitors.length !== 1 && 's'}
         </span>
         <div className="flex items-center gap-2">
-          <span>Show</span>
+          <button
+            onClick={() => setPage(Math.max(1, safePage - 1))}
+            disabled={safePage <= 1}
+            className="px-2 py-1 rounded hover:bg-muted disabled:opacity-30"
+          >
+            ←
+          </button>
+          <span className="tabular-nums">
+            {safePage}/{totalPages}
+          </span>
+          <button
+            onClick={() => setPage(Math.min(totalPages, safePage + 1))}
+            disabled={safePage >= totalPages}
+            className="px-2 py-1 rounded hover:bg-muted disabled:opacity-30"
+          >
+            →
+          </button>
           <Select
             value={String(pageSize)}
-            onValueChange={(v) => setPageSize(parseInt(v, 10))}
+            onValueChange={(v) => { setPageSize(parseInt(v, 10)); setPage(1) }}
           >
             <SelectTrigger className="w-17.5 h-8">
               <SelectValue />

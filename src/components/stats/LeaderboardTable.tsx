@@ -59,6 +59,10 @@ export function LeaderboardTable() {
     'lbPageSize',
     parseAsInteger.withDefault(10),
   )
+  const [page, setPage] = useQueryState(
+    'lbPage',
+    parseAsInteger.withDefault(1),
+  )
 
   const fetchLeaderboard = async () => {
     setLoading(true)
@@ -86,6 +90,7 @@ export function LeaderboardTable() {
       setSort(column)
       setOrder('desc')
     }
+    setPage(1)
   }
 
   const sorted = useMemo(() => {
@@ -112,7 +117,9 @@ export function LeaderboardTable() {
     })
   }, [entries, sort, order])
 
-  const paginated = sorted.slice(0, pageSize)
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
+  const safePage = Math.min(page, totalPages)
+  const paginated = sorted.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   if (loading) {
     return (
@@ -178,7 +185,7 @@ export function LeaderboardTable() {
         <TableBody>
           {paginated.map((entry, idx) => {
             const isMe = entry.playerId === localPlayer?.id
-            const rank = idx + 1
+            const rank = (safePage - 1) * pageSize + idx + 1
             return (
               <motion.tr
                 key={entry.playerId}
@@ -231,10 +238,26 @@ export function LeaderboardTable() {
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>{entries.length} player{entries.length !== 1 && 's'}</span>
         <div className="flex items-center gap-2">
-          <span>Show</span>
+          <button
+            onClick={() => setPage(Math.max(1, safePage - 1))}
+            disabled={safePage <= 1}
+            className="px-2 py-1 rounded hover:bg-muted disabled:opacity-30"
+          >
+            ←
+          </button>
+          <span className="tabular-nums">
+            {safePage}/{totalPages}
+          </span>
+          <button
+            onClick={() => setPage(Math.min(totalPages, safePage + 1))}
+            disabled={safePage >= totalPages}
+            className="px-2 py-1 rounded hover:bg-muted disabled:opacity-30"
+          >
+            →
+          </button>
           <Select
             value={String(pageSize)}
-            onValueChange={(v) => setPageSize(parseInt(v, 10))}
+            onValueChange={(v) => { setPageSize(parseInt(v, 10)); setPage(1) }}
           >
             <SelectTrigger className="w-17.5 h-8">
               <SelectValue />
