@@ -48,9 +48,9 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
     setError('')
     setSubmitting(true)
 
-    try {
-      const supabase = createClient()
+    const supabase = createClient()
 
+    try {
       if (mode === 'register') {
         const { error: updateError } = await supabase.auth.updateUser({
           email,
@@ -94,6 +94,9 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
         setOpen(false)
         resetForm()
       }
+    } catch (err) {
+      console.error('Auth submit error:', err)
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {
       setSubmitting(false)
     }

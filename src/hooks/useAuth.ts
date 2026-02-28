@@ -108,7 +108,7 @@ export function useAuth() {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (cancelled || !initDone.current) return
 
         if (event === 'SIGNED_OUT') {
@@ -119,7 +119,20 @@ export function useAuth() {
         }
 
         if (session?.user) {
-          await applyUser(supabase, session.user)
+          setUser(session.user)
+          // Fire-and-forget: don't block the auth lock with DB calls
+          loadPlayerFromDb(
+            supabase,
+            session.user.id,
+            session.user.is_anonymous ?? true,
+          )
+            .then((p) => {
+              if (p && !cancelled) {
+                setPlayer(p)
+                setLocalPlayer(p)
+              }
+            })
+            .catch(console.error)
         }
       },
     )
