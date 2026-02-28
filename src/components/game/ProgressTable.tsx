@@ -113,33 +113,49 @@ export function ProgressTable() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead
-              className="cursor-pointer select-none w-[35%] hidden sm:table-cell"
-              onClick={() => handleSort('progress')}
-            >
-              Progress
-              <SortIcon active={sort === 'progress'} order={order} />
+            <TableHead className="w-[35%] hidden sm:table-cell">
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit"
+                onClick={() => handleSort('progress')}
+                aria-label={`Sort by progress ${sort === 'progress' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
+                Progress
+                <SortIcon active={sort === 'progress'} order={order} />
+              </button>
             </TableHead>
-            <TableHead
-              className="cursor-pointer select-none"
-              onClick={() => handleSort('name')}
-            >
-              Player
-              <SortIcon active={sort === 'name'} order={order} />
+            <TableHead>
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit"
+                onClick={() => handleSort('name')}
+                aria-label={`Sort by name ${sort === 'name' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
+                Player
+                <SortIcon active={sort === 'name'} order={order} />
+              </button>
             </TableHead>
-            <TableHead
-              className="cursor-pointer select-none text-right"
-              onClick={() => handleSort('wpm')}
-            >
-              WPM
-              <SortIcon active={sort === 'wpm'} order={order} />
+            <TableHead className="text-right">
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto"
+                onClick={() => handleSort('wpm')}
+                aria-label={`Sort by WPM ${sort === 'wpm' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
+                WPM
+                <SortIcon active={sort === 'wpm'} order={order} />
+              </button>
             </TableHead>
-            <TableHead
-              className="cursor-pointer select-none text-right"
-              onClick={() => handleSort('accuracy')}
-            >
-              Accuracy
-              <SortIcon active={sort === 'accuracy'} order={order} />
+            <TableHead className="text-right">
+              <button
+                type="button"
+                className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto"
+                onClick={() => handleSort('accuracy')}
+                aria-label={`Sort by accuracy ${sort === 'accuracy' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}
+              >
+                Accuracy
+                <SortIcon active={sort === 'accuracy'} order={order} />
+              </button>
             </TableHead>
           </TableRow>
         </TableHeader>

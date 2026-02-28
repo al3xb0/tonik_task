@@ -1,7 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientId } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
+  const { allowed } = checkRateLimit(
+    `player:${getClientId(request)}`,
+    { limit: 30, windowMs: 60_000 },
+  )
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    )
+  }
+
   const supabase = await createClient()
 
   const {

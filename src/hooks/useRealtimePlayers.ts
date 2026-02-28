@@ -35,7 +35,13 @@ export function useRealtimePlayers() {
       })
     })
 
-    channel.subscribe()
+    channel.subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR') {
+        console.error('Realtime channel error:', err)
+      } else if (status === 'TIMED_OUT') {
+        console.warn('Realtime channel timed out, retrying...')
+      }
+    })
     channelRef.current = channel
 
     return () => {

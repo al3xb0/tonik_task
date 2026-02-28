@@ -63,9 +63,10 @@ export function LeaderboardTable() {
   const fetchLeaderboard = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/stats/leaderboard')
+      const res = await fetch('/api/stats/leaderboard?limit=100')
       if (res.ok) {
-        setEntries(await res.json())
+        const body = await res.json()
+        setEntries(Array.isArray(body) ? body : body.items ?? [])
       }
     } catch {
       // silently fail
@@ -142,25 +143,35 @@ export function LeaderboardTable() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-12 text-center">#</TableHead>
-            <TableHead className="cursor-pointer select-none" onClick={() => handleSort('name')}>
-              Player
-              <SortIcon active={sort === 'name'} order={order} />
+            <TableHead>
+              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit" onClick={() => handleSort('name')} aria-label={`Sort by name ${sort === 'name' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+                Player
+                <SortIcon active={sort === 'name'} order={order} />
+              </button>
             </TableHead>
-            <TableHead className="cursor-pointer select-none text-right" onClick={() => handleSort('bestWpm')}>
-              Best WPM
-              <SortIcon active={sort === 'bestWpm'} order={order} />
+            <TableHead className="text-right">
+              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('bestWpm')} aria-label={`Sort by best WPM ${sort === 'bestWpm' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+                Best WPM
+                <SortIcon active={sort === 'bestWpm'} order={order} />
+              </button>
             </TableHead>
-            <TableHead className="cursor-pointer select-none text-right" onClick={() => handleSort('avgWpm')}>
-              Avg WPM
-              <SortIcon active={sort === 'avgWpm'} order={order} />
+            <TableHead className="text-right">
+              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('avgWpm')} aria-label={`Sort by average WPM ${sort === 'avgWpm' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+                Avg WPM
+                <SortIcon active={sort === 'avgWpm'} order={order} />
+              </button>
             </TableHead>
-            <TableHead className="cursor-pointer select-none text-right" onClick={() => handleSort('avgAccuracy')}>
-              Avg Accuracy
-              <SortIcon active={sort === 'avgAccuracy'} order={order} />
+            <TableHead className="text-right">
+              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('avgAccuracy')} aria-label={`Sort by average accuracy ${sort === 'avgAccuracy' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+                Avg Accuracy
+                <SortIcon active={sort === 'avgAccuracy'} order={order} />
+              </button>
             </TableHead>
-            <TableHead className="cursor-pointer select-none text-right" onClick={() => handleSort('gamesPlayed')}>
-              Games
-              <SortIcon active={sort === 'gamesPlayed'} order={order} />
+            <TableHead className="text-right">
+              <button type="button" className="cursor-pointer select-none inline-flex items-center bg-transparent border-none p-0 font-inherit text-inherit ml-auto" onClick={() => handleSort('gamesPlayed')} aria-label={`Sort by games played ${sort === 'gamesPlayed' ? (order === 'asc' ? 'descending' : 'ascending') : 'descending'}`}>
+                Games
+                <SortIcon active={sort === 'gamesPlayed'} order={order} />
+              </button>
             </TableHead>
           </TableRow>
         </TableHeader>

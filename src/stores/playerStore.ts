@@ -80,6 +80,12 @@ export const usePlayerStore = create<PlayerStore>()(
     {
       name: 'typeracer-player-settings',
       partialize: (state) => ({ tableSort: state.tableSort }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.localPlayer = null
+          state.competitors = []
+        }
+      },
     },
   ),
 )

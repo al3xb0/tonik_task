@@ -41,7 +41,9 @@ export function useGameRound({ enabled = true }: { enabled?: boolean } = {}) {
     fetchingRef.current = true
 
     try {
-      const res = await fetch(`/api/rounds?mode=${selectedMode}`)
+      const res = await fetch(`/api/rounds?mode=${selectedMode}`, {
+        cache: 'no-store',
+      })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         console.error('Failed to fetch round:', res.status, body)
@@ -95,7 +97,7 @@ export function useGameRound({ enabled = true }: { enabled?: boolean } = {}) {
         clearTimers()
         setPhase('results')
       }
-    }, 1000)
+    }, 250)
 
     return () => {
       if (intervalRef.current) {

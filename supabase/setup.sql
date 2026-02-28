@@ -72,7 +72,9 @@ create policy "Results are viewable by everyone" on round_results for select usi
 drop policy if exists "Users can insert own results" on round_results;
 create policy "Users can insert own results" on round_results for insert with check (auth.uid() = player_id);
 drop policy if exists "Users can update own results" on round_results;
-create policy "Users can update own results" on round_results for update using (auth.uid() = player_id);
+create policy "Users can update own results" on round_results for update
+  using (auth.uid() = player_id)
+  with check (auth.uid() = player_id);
 
 alter table sentences enable row level security;
 drop policy if exists "Sentences are viewable by everyone" on sentences;
@@ -83,6 +85,32 @@ drop policy if exists "Rounds are viewable by everyone" on game_rounds;
 create policy "Rounds are viewable by everyone" on game_rounds for select using (true);
 drop policy if exists "Rounds can be inserted by authenticated" on game_rounds;
 create policy "Rounds can be inserted by authenticated" on game_rounds for insert with check (auth.role() = 'authenticated');
+
+-- Leaderboard aggregation RPC (runs SQL-side instead of fetching all rows to JS)
+create or replace function get_leaderboard(lim int default 20, off int default 0)
+returns table (
+  "playerId" uuid,
+  "playerName" text,
+  "bestWpm" int,
+  "avgWpm" int,
+  "avgAccuracy" numeric,
+  "gamesPlayed" bigint,
+  "gamesCompleted" bigint
+) as $$
+  select
+    rr.player_id as "playerId",
+    coalesce(p.name, 'Unknown') as "playerName",
+    max(rr.wpm)::int as "bestWpm",
+    round(avg(rr.wpm))::int as "avgWpm",
+    round(avg(rr.accuracy), 4) as "avgAccuracy",
+    count(*) as "gamesPlayed",
+    count(*) filter (where rr.completed) as "gamesCompleted"
+  from round_results rr
+  left join players p on p.id = rr.player_id
+  group by rr.player_id, p.name
+  order by max(rr.wpm) desc
+  limit lim offset off;
+$$ language sql stable security invoker;
 
 -- 3. Seed sentences (skip if already exist)
 INSERT INTO sentences (text, mode, difficulty) VALUES

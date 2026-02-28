@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit, getClientId } from '@/lib/rate-limit'
 import type { GameMode } from '@/types/game'
 
 const DURATION_BY_MODE: Record<GameMode, number> = {
@@ -15,6 +16,17 @@ function getRandomBaseMode(): GameMode {
 }
 
 export async function GET(request: Request) {
+  const { allowed, remaining } = checkRateLimit(
+    `rounds:${getClientId(request)}`,
+    { limit: 30, windowMs: 60_000 },
+  )
+  if (!allowed) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60', 'X-RateLimit-Remaining': '0' } },
+    )
+  }
+
   const supabase = await createClient()
 
   const {
@@ -84,6 +96,32 @@ export async function GET(request: Request) {
     .single()
 
   if (roundError || !newRound) {
+    // Race condition: another request may have created a round concurrently.
+    // Re-check for an active round before returning an error.
+    const { data: raceRound } = await supabase
+      .from('game_rounds')
+      .select('id, sentence_id, mode, started_at, ended_at')
+      .gt('ended_at', new Date().toISOString())
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (raceRound) {
+      const { data: raceSentence } = await supabase
+        .from('sentences')
+        .select('text')
+        .eq('id', raceRound.sentence_id)
+        .single()
+
+      return NextResponse.json({
+        id: raceRound.id,
+        sentenceText: raceSentence?.text ?? '',
+        mode: raceRound.mode,
+        startedAt: raceRound.started_at,
+        endedAt: raceRound.ended_at,
+      })
+    }
+
     return NextResponse.json(
       { error: 'Failed to create round', details: roundError?.message },
       { status: 500 },

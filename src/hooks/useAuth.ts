@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { usePlayerStore } from '@/stores/playerStore'
 import type { Player } from '@/types/game'
-import type { User } from '@supabase/supabase-js'
+import type { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 function generateAnonName(): string {
   const num = Math.floor(1000 + Math.random() * 9000)
@@ -79,13 +79,13 @@ export function useAuth() {
 
   useEffect(() => {
     const supabase = createClient()
-    let cancelled = false
+    const cancelledRef_inner = { current: false }
 
     const init = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
 
-        if (cancelled) return
+        if (cancelledRef_inner.current) return
 
         let authUser = session?.user ?? null
 
@@ -94,13 +94,13 @@ export function useAuth() {
           authUser = data?.user ?? null
         }
 
-        if (authUser && !cancelled) {
+        if (authUser && !cancelledRef_inner.current) {
           await applyUser(supabase, authUser)
         }
       } catch (err) {
         console.error('Auth init error:', err)
       } finally {
-        if (!cancelled) {
+        if (!cancelledRef_inner.current) {
           initDone.current = true
           setIsLoading(false)
         }
@@ -108,8 +108,8 @@ export function useAuth() {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (cancelled || !initDone.current) return
+      (event: AuthChangeEvent, session: Session | null) => {
+        if (cancelledRef_inner.current || !initDone.current) return
 
         if (event === 'SIGNED_OUT') {
           setUser(null)
@@ -127,7 +127,7 @@ export function useAuth() {
             session.user.is_anonymous ?? true,
           )
             .then((p) => {
-              if (p && !cancelled) {
+              if (p && !cancelledRef_inner.current) {
                 setPlayer(p)
                 setLocalPlayer(p)
               }
@@ -140,7 +140,7 @@ export function useAuth() {
     init()
 
     return () => {
-      cancelled = true
+      cancelledRef_inner.current = true
       subscription.unsubscribe()
     }
   }, [setLocalPlayer, applyUser])

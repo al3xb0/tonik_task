@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { createRoundChannel, sendTypingUpdate } from '@/lib/supabase/realtime'
@@ -77,7 +77,11 @@ export function TypingInput() {
 
     const supabase = createClient()
     const channel = createRoundChannel(supabase, currentRound.id)
-    channel.subscribe()
+    channel.subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR') {
+        console.error('TypingInput channel error:', err)
+      }
+    })
     channelRef.current = channel
 
     return () => {
@@ -86,7 +90,7 @@ export function TypingInput() {
     }
   }, [currentRound?.id])
 
-  const throttledBroadcast = useCallback(
+  const throttledBroadcast = useRef(
     throttle(
       (payload: {
         playerId: string
@@ -102,14 +106,14 @@ export function TypingInput() {
       },
       300,
     ),
-    [],
-  )
+  ).current
 
   useEffect(() => {
+    const broadcast = throttledBroadcast
     return () => {
-      throttledBroadcast.cancel()
+      broadcast.cancel()
     }
-  }, [throttledBroadcast])
+  }, [])
 
   useEffect(() => {
     if (!localPlayer || !isActive) return
@@ -131,7 +135,7 @@ export function TypingInput() {
       accuracy,
       isCompleted,
     })
-  }, [typedText, wpm, accuracy, isCompleted])
+  }, [typedText, wpm, accuracy, isCompleted, localPlayer, isActive, upsertCompetitor, throttledBroadcast])
 
   useEffect(() => {
     if (!isCompleted || !currentRound || !localPlayer || resultSavedRef.current)
@@ -149,7 +153,7 @@ export function TypingInput() {
         completed: true,
       },
       { onConflict: 'round_id,player_id' },
-    ).then(({ error }) => {
+    ).then(({ error }: { error: unknown }) => {
       if (error) console.error('Failed to save result:', error)
     })
   }, [isCompleted, currentRound, localPlayer, wpm, accuracy])
@@ -170,7 +174,7 @@ export function TypingInput() {
         completed: isCompleted,
       },
       { onConflict: 'round_id,player_id' },
-    ).then(({ error }) => {
+    ).then(({ error }: { error: unknown }) => {
       if (error) console.error('Failed to save timeout result:', error)
     })
   }, [phase])
@@ -197,10 +201,11 @@ export function TypingInput() {
   }
 
   return (
-    <div className="relative w-full" data-testid="typing-input">
+    <div className="relative w-full" data-testid="typing-input" role="region" aria-label="Typing area">
       <div
         className="rounded-lg border bg-card p-4 sm:p-6 font-mono text-base sm:text-lg leading-relaxed cursor-text min-h-30 select-none"
         onClick={handleOverlayClick}
+        aria-hidden="true"
       >
         {!targetText && (
           <span className="text-muted-foreground">Waiting for round...</span>
@@ -225,6 +230,7 @@ export function TypingInput() {
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
+        aria-label="Type the displayed text here"
         data-testid="typing-textarea"
       />
 
