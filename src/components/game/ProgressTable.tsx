@@ -175,7 +175,7 @@ export function ProgressTable() {
                           transition={{ duration: 0.3 }}
                         />
                       </div>
-                      <span className="text-xs text-muted-foreground font-mono truncate max-w-[200px]">
+                      <span className="text-xs text-muted-foreground font-mono truncate max-w-50">
                         {previewText}
                         {c.typedText.length > 20 && '…'}
                       </span>
@@ -221,7 +221,7 @@ export function ProgressTable() {
             value={String(pageSize)}
             onValueChange={(v) => setPageSize(parseInt(v, 10))}
           >
-            <SelectTrigger className="w-[70px] h-8">
+            <SelectTrigger className="w-17.5 h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

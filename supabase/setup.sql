@@ -16,7 +16,10 @@ begin
   insert into public.players (id, name, is_anonymous)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data->>'name', 'Anonymous'),
+    coalesce(
+      nullif(new.raw_user_meta_data->>'name', ''),
+      'Anonymous' || floor(1000 + random() * 9000)::int::text
+    ),
     coalesce((new.raw_user_meta_data->>'is_anonymous')::boolean, true)
   );
   return new;
@@ -68,6 +71,8 @@ drop policy if exists "Results are viewable by everyone" on round_results;
 create policy "Results are viewable by everyone" on round_results for select using (true);
 drop policy if exists "Users can insert own results" on round_results;
 create policy "Users can insert own results" on round_results for insert with check (auth.uid() = player_id);
+drop policy if exists "Users can update own results" on round_results;
+create policy "Users can update own results" on round_results for update using (auth.uid() = player_id);
 
 alter table sentences enable row level security;
 drop policy if exists "Sentences are viewable by everyone" on sentences;

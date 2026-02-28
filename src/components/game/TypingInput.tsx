@@ -147,8 +147,31 @@ export function TypingInput() {
         completed: true,
       },
       { onConflict: 'round_id,player_id' },
-    )
+    ).then(({ error }) => {
+      if (error) console.error('Failed to save result:', error)
+    })
   }, [isCompleted, currentRound, localPlayer, wpm, accuracy])
+
+  useEffect(() => {
+    if (phase !== 'results' || !currentRound || !localPlayer || resultSavedRef.current)
+      return
+    if (typedText.length === 0) return
+
+    resultSavedRef.current = true
+    const supabase = createClient()
+    supabase.from('round_results').upsert(
+      {
+        round_id: currentRound.id,
+        player_id: localPlayer.id,
+        wpm: Math.round(wpm),
+        accuracy: parseFloat(accuracy.toFixed(4)),
+        completed: isCompleted,
+      },
+      { onConflict: 'round_id,player_id' },
+    ).then(({ error }) => {
+      if (error) console.error('Failed to save timeout result:', error)
+    })
+  }, [phase])
 
   useEffect(() => {
     resultSavedRef.current = false

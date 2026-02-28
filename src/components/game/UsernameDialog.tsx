@@ -16,14 +16,16 @@ import { Button } from '@/components/ui/button'
 interface UsernameDialogProps {
   open: boolean
   onSubmit: (name: string) => Promise<void>
+  onClose: () => void
+  currentName?: string
 }
 
 const NAME_REGEX = /^[a-zA-Z0-9\s]+$/
 const MIN_LENGTH = 3
 const MAX_LENGTH = 20
 
-export function UsernameDialog({ open, onSubmit }: UsernameDialogProps) {
-  const [name, setName] = useState('')
+export function UsernameDialog({ open, onSubmit, onClose, currentName }: UsernameDialogProps) {
+  const [name, setName] = useState(currentName ?? '')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -46,6 +48,7 @@ export function UsernameDialog({ open, onSubmit }: UsernameDialogProps) {
     setSubmitting(true)
     try {
       await onSubmit(trimmed)
+      onClose()
     } finally {
       setSubmitting(false)
     }
@@ -54,12 +57,8 @@ export function UsernameDialog({ open, onSubmit }: UsernameDialogProps) {
   return (
     <AnimatePresence>
       {open && (
-        <Dialog open={open} onOpenChange={() => {}}>
-          <DialogContent
-            showCloseButton={false}
-            onPointerDownOutside={(e) => e.preventDefault()}
-            onEscapeKeyDown={(e) => e.preventDefault()}
-          >
+        <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+          <DialogContent>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -67,9 +66,9 @@ export function UsernameDialog({ open, onSubmit }: UsernameDialogProps) {
             >
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
-                  <DialogTitle>Welcome to TypeRacer!</DialogTitle>
+                  <DialogTitle>Change your name</DialogTitle>
                   <DialogDescription>
-                    Choose a name to get started. Other players will see this name.
+                    Other players will see this name. You can close to keep your current name.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -87,9 +86,12 @@ export function UsernameDialog({ open, onSubmit }: UsernameDialogProps) {
                     <p className="text-sm text-red-500 mt-1">{error}</p>
                   )}
                 </div>
-                <DialogFooter>
+                <DialogFooter className="gap-2">
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Skip
+                  </Button>
                   <Button type="submit" disabled={submitting}>
-                    {submitting ? 'Saving...' : 'Start Playing'}
+                    {submitting ? 'Saving...' : 'Save Name'}
                   </Button>
                 </DialogFooter>
               </form>

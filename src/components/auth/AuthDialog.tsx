@@ -67,20 +67,15 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
         } = await supabase.auth.getUser()
 
         if (user) {
-          const updateData: Record<string, unknown> = { is_anonymous: false }
-          if (playerName && playerName !== 'Anonymous') {
-            updateData.name = playerName
-          }
           await supabase
             .from('players')
-            .update(updateData)
+            .update({ is_anonymous: false })
             .eq('id', user.id)
         }
 
         toast.success('Account created!')
         setOpen(false)
         resetForm()
-        window.location.reload()
       } else {
         await supabase.auth.signOut({ scope: 'local' })
 
@@ -90,6 +85,7 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
         })
 
         if (signInError) {
+          await supabase.auth.signInAnonymously()
           setError(signInError.message)
           return
         }
@@ -97,7 +93,6 @@ export function AuthDialog({ isAnonymous, playerName }: AuthDialogProps) {
         toast.success('Logged in!')
         setOpen(false)
         resetForm()
-        window.location.reload()
       }
     } finally {
       setSubmitting(false)
