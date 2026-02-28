@@ -3,18 +3,21 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useGameStore } from '@/stores/gameStore'
+import { toast } from 'sonner'
 import type { GameRound } from '@/types/game'
 
 const RESULTS_DURATION = 5000
 
-export function useGameRound() {
+export function useGameRound({ enabled = true }: { enabled?: boolean } = {}) {
   const {
     currentRound,
     phase,
     selectedMode,
+    autoStart,
     setCurrentRound,
     setPhase,
     setTimeLeft,
+    setAutoStart,
     reset,
   } = useGameStore()
 
@@ -39,7 +42,12 @@ export function useGameRound() {
 
     try {
       const res = await fetch(`/api/rounds?mode=${selectedMode}`)
-      if (!res.ok) return
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.error('Failed to fetch round:', res.status, body)
+        toast.error(body.error || `Failed to load round (${res.status})`)
+        return
+      }
 
       const round: GameRound = await res.json()
       setCurrentRound(round)
@@ -53,19 +61,24 @@ export function useGameRound() {
       if (remaining > 0) {
         setPhase('active')
       }
+    } catch (err) {
+      console.error('Network error fetching round:', err)
+      toast.error('Network error — could not load round')
     } finally {
       fetchingRef.current = false
     }
   }, [selectedMode, setCurrentRound, setPhase, setTimeLeft])
 
-  const startNextRound = useCallback(() => {
-    reset()
+  const startRound = useCallback(() => {
+    setAutoStart(true)
     fetchRound()
-  }, [reset, fetchRound])
+  }, [setAutoStart, fetchRound])
 
-  useEffect(() => {
-    fetchRound()
-  }, [fetchRound])
+  const exitRound = useCallback(() => {
+    clearTimers()
+    setAutoStart(false)
+    reset()
+  }, [clearTimers, setAutoStart, reset])
 
   useEffect(() => {
     if (phase !== 'active' || !currentRound) return
@@ -93,9 +106,11 @@ export function useGameRound() {
 
   useEffect(() => {
     if (phase !== 'results') return
+    if (!autoStart) return
 
     resultsTimeoutRef.current = setTimeout(() => {
-      startNextRound()
+      reset()
+      fetchRound()
     }, RESULTS_DURATION)
 
     return () => {
@@ -104,9 +119,11 @@ export function useGameRound() {
         resultsTimeoutRef.current = null
       }
     }
-  }, [phase, startNextRound])
+  }, [phase, autoStart, reset, fetchRound])
 
   useEffect(() => {
+    if (!enabled) return
+
     const supabase = createClient()
 
     const channel = supabase
@@ -118,25 +135,10 @@ export function useGameRound() {
           schema: 'public',
           table: 'game_rounds',
         },
-        (payload) => {
-          const row = payload.new as Record<string, unknown>
-          const round: GameRound = {
-            id: row.id as string,
-            sentenceText: row.sentence_text as string,
-            mode: row.mode as GameRound['mode'],
-            startedAt: row.started_at as string,
-            endedAt: row.ended_at as string,
-          }
-
-          const now = Date.now()
-          const endedAt = new Date(round.endedAt).getTime()
-          const remaining = Math.max(0, Math.ceil((endedAt - now) / 1000))
-
-          if (remaining > 0) {
+        () => {
+          if (autoStart) {
             clearTimers()
-            setCurrentRound(round)
-            setTimeLeft(remaining)
-            setPhase('active')
+            fetchRound()
           }
         },
       )
@@ -145,7 +147,7 @@ export function useGameRound() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [clearTimers, setCurrentRound, setPhase, setTimeLeft])
+  }, [enabled, autoStart, clearTimers, fetchRound])
 
-  return { currentRound, phase }
+  return { currentRound, phase, startRound, exitRound }
 }

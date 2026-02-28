@@ -15,7 +15,7 @@ export function useAuth() {
   const supabase = createClient()
 
   const loadPlayer = useCallback(
-    async (userId: string) => {
+    async (userId: string, isAnon = true): Promise<Player | null> => {
       const { data } = await supabase
         .from('players')
         .select('id, name, is_anonymous')
@@ -32,6 +32,42 @@ export function useAuth() {
         setLocalPlayer(p)
         return p
       }
+
+      const { data: created } = await supabase
+        .from('players')
+        .insert({ id: userId, name: 'Anonymous', is_anonymous: isAnon })
+        .select('id, name, is_anonymous')
+        .single()
+
+      if (created) {
+        const p: Player = {
+          id: created.id,
+          name: created.name,
+          isAnonymous: created.is_anonymous,
+        }
+        setPlayer(p)
+        setLocalPlayer(p)
+        return p
+      }
+
+      await new Promise((r) => setTimeout(r, 1000))
+      const { data: retried } = await supabase
+        .from('players')
+        .select('id, name, is_anonymous')
+        .eq('id', userId)
+        .single()
+
+      if (retried) {
+        const p: Player = {
+          id: retried.id,
+          name: retried.name,
+          isAnonymous: retried.is_anonymous,
+        }
+        setPlayer(p)
+        setLocalPlayer(p)
+        return p
+      }
+
       return null
     },
     [supabase, setLocalPlayer],
@@ -46,7 +82,7 @@ export function useAuth() {
 
         if (session?.user) {
           setUser(session.user)
-          await loadPlayer(session.user.id)
+          await loadPlayer(session.user.id, session.user.is_anonymous ?? true)
         } else {
           const {
             data: { user: anonUser },
@@ -54,7 +90,7 @@ export function useAuth() {
 
           if (anonUser) {
             setUser(anonUser)
-            await loadPlayer(anonUser.id)
+            await loadPlayer(anonUser.id, true)
           }
         }
       } finally {
@@ -105,11 +141,23 @@ export function useAuth() {
     [user, player, supabase, setLocalPlayer],
   )
 
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut({ scope: 'local' })
+    setUser(null)
+    setPlayer(null)
+    setLocalPlayer(null as unknown as Player)
+    try {
+      localStorage.removeItem('player-store')
+    } catch {}
+    window.location.reload()
+  }, [supabase, setLocalPlayer])
+
   return {
     user,
     player,
     isLoading,
     isAnonymous: user?.is_anonymous ?? true,
     updatePlayerName,
+    signOut,
   }
 }

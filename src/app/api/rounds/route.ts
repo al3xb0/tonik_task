@@ -28,18 +28,24 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const mode = (searchParams.get('mode') as GameMode) || 'sentences'
 
-  const { data: activeRound } = await supabase
+  const { data: activeRound, error: activeError } = await supabase
     .from('game_rounds')
-    .select('id, sentence_text, mode, started_at, ended_at')
+    .select('id, sentence_id, mode, started_at, ended_at')
     .gt('ended_at', new Date().toISOString())
     .order('started_at', { ascending: false })
     .limit(1)
     .single()
 
   if (activeRound) {
+    const { data: sentenceRow } = await supabase
+      .from('sentences')
+      .select('text')
+      .eq('id', activeRound.sentence_id)
+      .single()
+
     return NextResponse.json({
       id: activeRound.id,
-      sentenceText: activeRound.sentence_text,
+      sentenceText: sentenceRow?.text ?? '',
       mode: activeRound.mode,
       startedAt: activeRound.started_at,
       endedAt: activeRound.ended_at,
@@ -49,20 +55,19 @@ export async function GET(request: Request) {
   const queryMode = mode === 'mixed' ? getRandomBaseMode() : mode
   const duration = DURATION_BY_MODE[mode]
 
-  const { data: sentence, error: sentenceError } = await supabase
+  const { data: sentences, error: sentenceError } = await supabase
     .from('sentences')
-    .select('text')
+    .select('id, text')
     .eq('mode', queryMode)
-    .limit(1)
-    .order('id', { ascending: false })
-    .single()
 
-  if (sentenceError || !sentence) {
+  if (sentenceError || !sentences || sentences.length === 0) {
     return NextResponse.json(
-      { error: 'No sentences available' },
+      { error: 'No sentences available', details: sentenceError?.message },
       { status: 500 },
     )
   }
+
+  const sentence = sentences[Math.floor(Math.random() * sentences.length)]
 
   const startedAt = new Date()
   const endedAt = new Date(startedAt.getTime() + duration * 1000)
@@ -70,24 +75,24 @@ export async function GET(request: Request) {
   const { data: newRound, error: roundError } = await supabase
     .from('game_rounds')
     .insert({
-      sentence_text: sentence.text,
+      sentence_id: sentence.id,
       mode,
       started_at: startedAt.toISOString(),
       ended_at: endedAt.toISOString(),
     })
-    .select('id, sentence_text, mode, started_at, ended_at')
+    .select('id, mode, started_at, ended_at')
     .single()
 
   if (roundError || !newRound) {
     return NextResponse.json(
-      { error: 'Failed to create round' },
+      { error: 'Failed to create round', details: roundError?.message },
       { status: 500 },
     )
   }
 
   return NextResponse.json({
     id: newRound.id,
-    sentenceText: newRound.sentence_text,
+    sentenceText: sentence.text,
     mode: newRound.mode,
     startedAt: newRound.started_at,
     endedAt: newRound.ended_at,
