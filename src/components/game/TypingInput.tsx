@@ -7,6 +7,7 @@ import { createRoundChannel, sendTypingUpdate } from '@/lib/supabase/realtime'
 import { useTypingMetrics } from '@/hooks/useTypingMetrics'
 import { useGameStore } from '@/stores/gameStore'
 import { usePlayerStore } from '@/stores/playerStore'
+import { toast } from 'sonner'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 function throttle<Args extends unknown[]>(
@@ -137,6 +138,7 @@ export function TypingInput() {
       return
 
     resultSavedRef.current = true
+    toast.success('You completed the round!', { duration: 3000 })
     const supabase = createClient()
     supabase.from('round_results').upsert(
       {
@@ -197,7 +199,7 @@ export function TypingInput() {
   return (
     <div className="relative w-full" data-testid="typing-input">
       <div
-        className="rounded-lg border bg-card p-6 font-mono text-lg leading-relaxed cursor-text min-h-30 select-none"
+        className="rounded-lg border bg-card p-4 sm:p-6 font-mono text-base sm:text-lg leading-relaxed cursor-text min-h-30 select-none"
         onClick={handleOverlayClick}
       >
         {!targetText && (

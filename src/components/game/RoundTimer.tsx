@@ -42,16 +42,23 @@ export function RoundTimer() {
   const totalDuration = ROUND_DURATIONS[currentRound.mode] ?? 60
   const progress = timeLeft / totalDuration
   const isUrgent = timeLeft < 10
+  const isBouncing = timeLeft <= 5 && timeLeft > 0
 
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-md">
-      <span
+      <motion.span
+        key={timeLeft}
+        animate={
+          isBouncing
+            ? { scale: [1, 1.15, 1], transition: { duration: 0.3 } }
+            : { scale: 1 }
+        }
         className={`text-3xl font-bold tabular-nums ${
           isUrgent ? 'text-red-500' : 'text-foreground'
         }`}
       >
         {formatTime(timeLeft)}
-      </span>
+      </motion.span>
       <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
         <motion.div
           className={`h-full rounded-full ${

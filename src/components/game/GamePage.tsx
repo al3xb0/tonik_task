@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useGameRound } from '@/hooks/useGameRound'
 import { useRealtimePlayers } from '@/hooks/useRealtimePlayers'
@@ -15,6 +16,7 @@ import { LeaderboardTable } from '@/components/stats/LeaderboardTable'
 import { UsernameDialog } from '@/components/game/UsernameDialog'
 import { AuthDialog } from '@/components/auth/AuthDialog'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export function GamePage() {
@@ -40,14 +42,33 @@ export function GamePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-lg">Loading...</p>
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-4xl px-4 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <Skeleton className="h-8 w-32 rounded-lg" />
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-24 rounded-lg" />
+              <Skeleton className="h-8 w-20 rounded-lg" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-72 rounded-lg mb-6" />
+          <div className="flex flex-col items-center gap-6">
+            <Skeleton className="h-10 w-64 rounded-lg" />
+            <Skeleton className="h-32 w-full rounded-lg" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="min-h-screen bg-background"
+    >
       <UsernameDialog
         open={nameDialogOpen}
         currentName={player?.name}
@@ -57,10 +78,10 @@ export function GamePage() {
         onClose={() => setNameDialogOpen(false)}
       />
 
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <header className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">TypeRacer</h1>
-          <div className="flex items-center gap-3">
+      <div className="mx-auto max-w-4xl px-3 sm:px-4 py-4 sm:py-8">
+        <header className="flex items-center justify-between mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">TypeRacer</h1>
+          <div className="flex items-center gap-2 sm:gap-3">
             {player && (
               <button
                 onClick={() => setNameDialogOpen(true)}
@@ -136,6 +157,6 @@ export function GamePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </motion.div>
   )
 }

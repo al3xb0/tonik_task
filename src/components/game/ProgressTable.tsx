@@ -114,7 +114,7 @@ export function ProgressTable() {
         <TableHeader>
           <TableRow>
             <TableHead
-              className="cursor-pointer select-none w-[35%]"
+              className="cursor-pointer select-none w-[35%] hidden sm:table-cell"
               onClick={() => handleSort('progress')}
             >
               Progress
@@ -163,7 +163,7 @@ export function ProgressTable() {
                       : 'hover:bg-muted/50'
                   }`}
                 >
-                  <TableCell className="py-3">
+                  <TableCell className="py-3 hidden sm:table-cell">
                     <div className="flex flex-col gap-1">
                       <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                         <motion.div

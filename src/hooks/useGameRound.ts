@@ -60,6 +60,7 @@ export function useGameRound({ enabled = true }: { enabled?: boolean } = {}) {
 
       if (remaining > 0) {
         setPhase('active')
+        toast.success('Round started!', { duration: 2000 })
       }
     } catch (err) {
       console.error('Network error fetching round:', err)
