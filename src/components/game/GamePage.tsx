@@ -2,10 +2,12 @@
 
 import { useAuth } from '@/hooks/useAuth'
 import { useGameRound } from '@/hooks/useGameRound'
+import { useRealtimePlayers } from '@/hooks/useRealtimePlayers'
 import { useGameStore } from '@/stores/gameStore'
 import { RoundTimer } from '@/components/game/RoundTimer'
 import { ModeSelector } from '@/components/game/ModeSelector'
 import { TypingInput } from '@/components/game/TypingInput'
+import { ProgressTable } from '@/components/game/ProgressTable'
 import { UsernameDialog } from '@/components/game/UsernameDialog'
 import { AuthDialog } from '@/components/auth/AuthDialog'
 import { Button } from '@/components/ui/button'
@@ -14,6 +16,7 @@ export function GamePage() {
   const { player, isLoading, isAnonymous, updatePlayerName, signOut } = useAuth()
   const { startRound, exitRound } = useGameRound({ enabled: !isLoading && !!player })
   const phase = useGameStore((s) => s.phase)
+  useRealtimePlayers()
 
   if (isLoading) {
     return (
@@ -66,6 +69,7 @@ export function GamePage() {
             <>
               <RoundTimer />
               <TypingInput />
+              <ProgressTable />
               <Button variant="outline" size="sm" onClick={exitRound}>
                 Exit Round
               </Button>
@@ -75,6 +79,7 @@ export function GamePage() {
           {phase === 'results' && (
             <>
               <RoundTimer />
+              <ProgressTable />
               <div className="flex gap-3">
                 <Button size="lg" onClick={startRound}>
                   Next Round
