@@ -43,6 +43,7 @@ export async function GET(request: Request) {
   const { data: activeRound } = await supabase
     .from('game_rounds')
     .select('id, sentence_id, mode, started_at, ended_at')
+    .eq('mode', mode)
     .gt('ended_at', new Date().toISOString())
     .order('started_at', { ascending: false })
     .limit(1)
@@ -101,6 +102,7 @@ export async function GET(request: Request) {
     const { data: raceRound } = await supabase
       .from('game_rounds')
       .select('id, sentence_id, mode, started_at, ended_at')
+      .eq('mode', mode)
       .gt('ended_at', new Date().toISOString())
       .order('started_at', { ascending: false })
       .limit(1)
