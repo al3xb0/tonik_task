@@ -15,10 +15,11 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 vi.mock('@/lib/supabase/realtime', () => ({
-  createRoundChannel: () => ({
+  acquireRoundChannel: () => ({
     subscribe: vi.fn(),
     send: vi.fn(),
   }),
+  releaseRoundChannel: vi.fn(),
   sendTypingUpdate: vi.fn(),
 }))
 

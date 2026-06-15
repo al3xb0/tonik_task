@@ -2,14 +2,13 @@
 
 import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { createRoundChannel, onTypingUpdate } from '@/lib/supabase/realtime'
+import { acquireRoundChannel, releaseRoundChannel, onTypingUpdate } from '@/lib/supabase/realtime'
 import { useGameStore } from '@/stores/gameStore'
 import { usePlayerStore } from '@/stores/playerStore'
 
 export function useRealtimePlayers() {
   const currentRound = useGameStore((s) => s.currentRound)
   const { upsertCompetitor, clearCompetitors, localPlayer } = usePlayerStore()
-  const channelRef = useRef<ReturnType<typeof createRoundChannel> | null>(null)
   const prevRoundIdRef = useRef<string | null>(null)
 
   const roundId = currentRound?.id
@@ -24,9 +23,9 @@ export function useRealtimePlayers() {
     prevRoundIdRef.current = roundId
 
     const supabase = createClient()
-    const channel = createRoundChannel(supabase, roundId)
+    acquireRoundChannel(supabase, roundId)
 
-    onTypingUpdate(channel, (payload) => {
+    const unsubscribe = onTypingUpdate(roundId, (payload) => {
       if (payload.playerId === localPlayerId) return
       upsertCompetitor({
         playerId: payload.playerId,
@@ -38,18 +37,9 @@ export function useRealtimePlayers() {
       })
     })
 
-    channel.subscribe((status, err) => {
-      if (status === 'CHANNEL_ERROR') {
-        console.error('Realtime channel error:', err)
-      } else if (status === 'TIMED_OUT') {
-        console.warn('Realtime channel timed out, retrying...')
-      }
-    })
-    channelRef.current = channel
-
     return () => {
-      supabase.removeChannel(channel)
-      channelRef.current = null
+      unsubscribe()
+      releaseRoundChannel(supabase, roundId)
     }
   }, [roundId, localPlayerId, clearCompetitors, upsertCompetitor])
 

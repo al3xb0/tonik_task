@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { createRoundChannel, sendTypingUpdate } from '@/lib/supabase/realtime'
+import { acquireRoundChannel, releaseRoundChannel, sendTypingUpdate } from '@/lib/supabase/realtime'
 import { useTypingMetrics } from '@/hooks/useTypingMetrics'
 import { useGameStore } from '@/stores/gameStore'
 import { usePlayerStore } from '@/stores/playerStore'
@@ -71,16 +71,10 @@ export function TypingInput() {
     if (!roundId) return
 
     const supabase = createClient()
-    const channel = createRoundChannel(supabase, roundId)
-    channel.subscribe((status, err) => {
-      if (status === 'CHANNEL_ERROR') {
-        console.error('TypingInput channel error:', err)
-      }
-    })
-    channelRef.current = channel
+    channelRef.current = acquireRoundChannel(supabase, roundId)
 
     return () => {
-      supabase.removeChannel(channel)
+      releaseRoundChannel(supabase, roundId)
       channelRef.current = null
     }
   }, [roundId])
