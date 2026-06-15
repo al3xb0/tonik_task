@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useQueryState, parseAsStringLiteral, parseAsInteger } from 'nuqs'
 import { motion } from 'framer-motion'
 import {
@@ -45,6 +45,7 @@ function SortIcon({ active, order }: { active: boolean; order: string }) {
 export function LeaderboardTable() {
   const { localPlayer } = usePlayerStore()
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const [sort, setSort] = useQueryState(
@@ -58,24 +59,31 @@ export function LeaderboardTable() {
   const [pageSize, setPageSize] = useQueryState('lbPageSize', parseAsInteger.withDefault(10))
   const [page, setPage] = useQueryState('lbPage', parseAsInteger.withDefault(1))
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/stats/leaderboard?limit=100')
+      const params = new URLSearchParams({
+        limit: String(pageSize),
+        offset: String((page - 1) * pageSize),
+        sort,
+        order,
+      })
+      const res = await fetch(`/api/stats/leaderboard?${params}`)
       if (res.ok) {
         const body = await res.json()
-        setEntries(Array.isArray(body) ? body : (body.items ?? []))
+        setEntries(body.items ?? [])
+        setTotal(body.total ?? 0)
       }
     } catch {
       // silently fail
     } finally {
       setLoading(false)
     }
-  }
+  }, [sort, order, page, pageSize])
 
   useEffect(() => {
     fetchLeaderboard()
-  }, [])
+  }, [fetchLeaderboard])
 
   const handleSort = (column: LbSortColumn) => {
     if (sort === column) {
@@ -87,35 +95,14 @@ export function LeaderboardTable() {
     setPage(1)
   }
 
-  const sorted = useMemo(() => {
-    return [...entries].sort((a, b) => {
-      let cmp = 0
-      switch (sort) {
-        case 'name':
-          cmp = a.playerName.localeCompare(b.playerName)
-          break
-        case 'bestWpm':
-          cmp = a.bestWpm - b.bestWpm
-          break
-        case 'avgWpm':
-          cmp = a.avgWpm - b.avgWpm
-          break
-        case 'avgAccuracy':
-          cmp = a.avgAccuracy - b.avgAccuracy
-          break
-        case 'gamesPlayed':
-          cmp = a.gamesPlayed - b.gamesPlayed
-          break
-      }
-      return order === 'asc' ? cmp : -cmp
-    })
-  }, [entries, sort, order])
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const safePage = Math.min(page, totalPages)
-  const paginated = sorted.slice((safePage - 1) * pageSize, safePage * pageSize)
 
-  if (loading) {
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages, setPage])
+
+  if (loading && entries.length === 0) {
     return (
       <div className="w-full space-y-3">
         <Skeleton className="h-10 w-full rounded-lg" />
@@ -126,7 +113,7 @@ export function LeaderboardTable() {
     )
   }
 
-  if (entries.length === 0) {
+  if (total === 0) {
     return (
       <div className="w-full rounded-lg border bg-card p-8 text-center text-muted-foreground text-sm">
         No results yet. Be the first to play!
@@ -202,7 +189,7 @@ export function LeaderboardTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginated.map((entry, idx) => {
+          {entries.map((entry, idx) => {
             const isMe = entry.playerId === localPlayer?.id
             const rank = (safePage - 1) * pageSize + idx + 1
             return (
@@ -250,7 +237,7 @@ export function LeaderboardTable() {
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
-          {entries.length} player{entries.length !== 1 && 's'}
+          {total} player{total !== 1 && 's'}
         </span>
         <div className="flex items-center gap-2">
           <button

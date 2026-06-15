@@ -87,7 +87,14 @@ drop policy if exists "Rounds can be inserted by authenticated" on game_rounds;
 create policy "Rounds can be inserted by authenticated" on game_rounds for insert with check (auth.role() = 'authenticated');
 
 -- Leaderboard aggregation RPC (runs SQL-side instead of fetching all rows to JS)
-create or replace function get_leaderboard(lim int default 20, off int default 0)
+-- Sorts server-side by a whitelisted column so server pagination stays correct.
+drop function if exists get_leaderboard(int, int);
+create or replace function get_leaderboard(
+  lim int default 20,
+  off int default 0,
+  sort_col text default 'bestWpm',
+  sort_dir text default 'desc'
+)
 returns table (
   "playerId" uuid,
   "playerName" text,
@@ -97,20 +104,40 @@ returns table (
   "gamesPlayed" bigint,
   "gamesCompleted" bigint
 ) as $$
-  select
-    rr.player_id as "playerId",
-    coalesce(p.name, 'Unknown') as "playerName",
-    max(rr.wpm)::int as "bestWpm",
-    round(avg(rr.wpm))::int as "avgWpm",
-    round(avg(rr.accuracy), 4) as "avgAccuracy",
-    count(*) as "gamesPlayed",
-    count(*) filter (where rr.completed) as "gamesCompleted"
-  from round_results rr
-  left join players p on p.id = rr.player_id
-  group by rr.player_id, p.name
-  order by max(rr.wpm) desc
-  limit lim offset off;
-$$ language sql stable security invoker;
+declare
+  order_expr text;
+  dir text;
+begin
+  order_expr := case sort_col
+    when 'name' then 'coalesce(p.name, ''Unknown'')'
+    when 'avgWpm' then 'avg(rr.wpm)'
+    when 'avgAccuracy' then 'avg(rr.accuracy)'
+    when 'gamesPlayed' then 'count(*)'
+    else 'max(rr.wpm)'
+  end;
+  dir := case when lower(sort_dir) = 'asc' then 'asc' else 'desc' end;
+
+  return query execute format(
+    $q$
+      select
+        rr.player_id as "playerId",
+        coalesce(p.name, 'Unknown') as "playerName",
+        max(rr.wpm)::int as "bestWpm",
+        round(avg(rr.wpm))::int as "avgWpm",
+        round(avg(rr.accuracy), 4) as "avgAccuracy",
+        count(*) as "gamesPlayed",
+        count(*) filter (where rr.completed) as "gamesCompleted"
+      from round_results rr
+      left join players p on p.id = rr.player_id
+      group by rr.player_id, p.name
+      order by %s %s, rr.player_id asc
+      limit $1 offset $2
+    $q$,
+    order_expr, dir
+  )
+  using lim, off;
+end;
+$$ language plpgsql stable security invoker;
 
 -- Total distinct players, for leaderboard pagination (matches get_leaderboard grouping)
 create or replace function get_leaderboard_count()

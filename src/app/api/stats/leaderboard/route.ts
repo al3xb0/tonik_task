@@ -28,9 +28,19 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(parseInt(searchParams.get('limit') ?? '20', 10) || 20, 1), 100)
   const offset = Math.max(parseInt(searchParams.get('offset') ?? '0', 10) || 0, 0)
 
+  const sortColumns = ['name', 'bestWpm', 'avgWpm', 'avgAccuracy', 'gamesPlayed'] as const
+  type SortColumn = (typeof sortColumns)[number]
+  const sortParam = searchParams.get('sort')
+  const sort: SortColumn = sortColumns.includes(sortParam as SortColumn)
+    ? (sortParam as SortColumn)
+    : 'bestWpm'
+  const order: 'asc' | 'desc' = searchParams.get('order') === 'asc' ? 'asc' : 'desc'
+
   const { data: aggregated, error } = await supabase.rpc('get_leaderboard', {
     lim: limit,
     off: offset,
+    sort_col: sort,
+    sort_dir: order,
   })
 
   if (error) {
@@ -91,7 +101,13 @@ export async function GET(request: Request) {
           gamesCompleted: agg.completed,
         }
       })
-      .sort((a, b) => b.bestWpm - a.bestWpm)
+      .sort((a, b) => {
+        const cmp =
+          sort === 'name'
+            ? a.playerName.localeCompare(b.playerName)
+            : a[sort] - b[sort]
+        return order === 'asc' ? cmp : -cmp
+      })
       .slice(offset, offset + limit)
 
     return NextResponse.json({ items: leaderboard, total: playerIds.length })
