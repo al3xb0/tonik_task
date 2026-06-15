@@ -97,9 +97,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ items: leaderboard, total: playerIds.length })
   }
 
-  const { count } = await supabase
-    .from('round_results')
-    .select('player_id', { count: 'exact', head: true })
+  const { data: total } = await supabase.rpc('get_leaderboard_count')
 
-  return NextResponse.json({ items: aggregated, total: count ?? aggregated.length })
+  return NextResponse.json({ items: aggregated, total: total ?? aggregated.length })
 }

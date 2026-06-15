@@ -112,6 +112,12 @@ returns table (
   limit lim offset off;
 $$ language sql stable security invoker;
 
+-- Total distinct players, for leaderboard pagination (matches get_leaderboard grouping)
+create or replace function get_leaderboard_count()
+returns bigint as $$
+  select count(distinct player_id) from round_results;
+$$ language sql stable security invoker;
+
 -- 3. Seed sentences (skip if already exist)
 INSERT INTO sentences (text, mode, difficulty) VALUES
 ('apple banana cherry dog elephant frog guitar house igloo jacket', 'words', 'easy'),
