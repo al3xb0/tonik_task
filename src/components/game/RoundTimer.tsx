@@ -2,13 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/stores/gameStore'
-
-const ROUND_DURATIONS: Record<string, number> = {
-  words: 30,
-  sentences: 60,
-  text: 90,
-  mixed: 60,
-}
+import { DURATION_BY_MODE } from '@/lib/game/config'
 
 function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60)
@@ -35,7 +29,7 @@ export function RoundTimer() {
     )
   }
 
-  const totalDuration = ROUND_DURATIONS[currentRound.mode] ?? 60
+  const totalDuration = DURATION_BY_MODE[currentRound.mode] ?? 60
   const progress = timeLeft / totalDuration
   const isUrgent = timeLeft < 10
   const isBouncing = timeLeft <= 5 && timeLeft > 0

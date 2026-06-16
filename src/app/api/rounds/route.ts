@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, getClientId } from '@/lib/rate-limit'
+import { DURATION_BY_MODE } from '@/lib/game/config'
 import type { GameMode } from '@/types/game'
-
-const DURATION_BY_MODE: Record<GameMode, number> = {
-  words: 30,
-  sentences: 60,
-  text: 90,
-  mixed: 60,
-}
 
 function getRandomBaseMode(): GameMode {
   const modes: GameMode[] = ['words', 'sentences', 'text']
