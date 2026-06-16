@@ -64,7 +64,6 @@ create policy "Players are viewable by everyone" on players for select using (tr
 drop policy if exists "Users can update own profile" on players;
 create policy "Users can update own profile" on players for update using (auth.uid() = id);
 drop policy if exists "Users can insert own player" on players;
-create policy "Users can insert own player" on players for insert with check (auth.uid() = id);
 
 alter table round_results enable row level security;
 drop policy if exists "Results are viewable by everyone" on round_results;

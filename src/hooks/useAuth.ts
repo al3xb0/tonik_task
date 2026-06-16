@@ -6,11 +6,6 @@ import { usePlayerStore } from '@/stores/playerStore'
 import type { Player } from '@/types/game'
 import type { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
 
-function generateAnonName(): string {
-  const num = Math.floor(1000 + Math.random() * 9000)
-  return `Anonymous${num}`
-}
-
 async function loadPlayerFromDb(
   supabase: ReturnType<typeof createClient>,
   userId: string,
@@ -23,29 +18,7 @@ async function loadPlayerFromDb(
       .eq('id', userId)
       .single()
 
-    if (data) {
-      return { id: data.id, name: data.name, isAnonymous: isAnon }
-    }
-
-    const name = generateAnonName()
-    const { data: created } = await supabase
-      .from('players')
-      .insert({ id: userId, name, is_anonymous: isAnon })
-      .select('id, name, is_anonymous')
-      .single()
-
-    if (created) {
-      return { id: created.id, name: created.name, isAnonymous: isAnon }
-    }
-
-    await new Promise((r) => setTimeout(r, 1000))
-    const { data: retried } = await supabase
-      .from('players')
-      .select('id, name, is_anonymous')
-      .eq('id', userId)
-      .single()
-
-    return retried ? { id: retried.id, name: retried.name, isAnonymous: isAnon } : null
+    return data ? { id: data.id, name: data.name, isAnonymous: isAnon } : null
   } catch (err) {
     console.error('loadPlayerFromDb error:', err)
     return null
