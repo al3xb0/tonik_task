@@ -84,7 +84,7 @@ export function useAuth() {
       if (event === 'SIGNED_OUT') {
         setUser(null)
         setPlayer(null)
-        setLocalPlayer(null as unknown as Player)
+        setLocalPlayer(null)
         return
       }
 

@@ -7,7 +7,7 @@ interface PlayerStore {
   competitors: Competitor[]
   tableSort: TableState
 
-  setLocalPlayer: (player: Player) => void
+  setLocalPlayer: (player: Player | null) => void
   upsertCompetitor: (
     update: { playerId: string } & Partial<Omit<Competitor, 'player'>> & { playerName?: string },
   ) => void
