@@ -12,6 +12,7 @@ import {
 interface UseTypingMetricsOptions {
   targetText: string
   enabled?: boolean
+  roundId?: string
 }
 
 interface UseTypingMetricsReturn {
@@ -23,12 +24,12 @@ interface UseTypingMetricsReturn {
   totalKeystrokes: number
   isCompleted: boolean
   handleInput: (newText: string) => void
-  reset: () => void
 }
 
 export function useTypingMetrics({
   targetText,
   enabled = true,
+  roundId,
 }: UseTypingMetricsOptions): UseTypingMetricsReturn {
   const [typedText, setTypedText] = useState('')
   const [wpm, setWpm] = useState(0)
@@ -63,6 +64,12 @@ export function useTypingMetrics({
     const correctWords = getCorrectWordCount(targetText, typedText)
     setWpm(calculateWPM(correctWords, elapsedSeconds))
   }, [targetText, typedText])
+
+  useEffect(() => {
+    startTimeRef.current = null
+    totalKeystrokesRef.current = 0
+    correctCharsRef.current = 0
+  }, [roundId])
 
   useEffect(() => {
     if (startTimeRef.current && !isCompleted) {
@@ -107,40 +114,15 @@ export function useTypingMetrics({
     [enabled, isCompleted, targetText, typedText, countCorrectChars],
   )
 
-  const reset = useCallback(() => {
-    setTypedText('')
-    setWpm(0)
-    setAccuracy(1)
-    startTimeRef.current = null
-    totalKeystrokesRef.current = 0
-    correctCharsRef.current = 0
-    setCorrectChars(0)
-    setTotalKeystrokes(0)
-    if (wpmIntervalRef.current) {
-      clearInterval(wpmIntervalRef.current)
-      wpmIntervalRef.current = null
-    }
-  }, [])
-
-  const [prevTargetText, setPrevTargetText] = useState(targetText)
-  if (targetText !== prevTargetText) {
-    setPrevTargetText(targetText)
+  const [prevRoundId, setPrevRoundId] = useState(roundId)
+  if (roundId !== prevRoundId) {
+    setPrevRoundId(roundId)
     setTypedText('')
     setWpm(0)
     setAccuracy(1)
     setCorrectChars(0)
     setTotalKeystrokes(0)
   }
-
-  useEffect(() => {
-    startTimeRef.current = null
-    totalKeystrokesRef.current = 0
-    correctCharsRef.current = 0
-    if (wpmIntervalRef.current) {
-      clearInterval(wpmIntervalRef.current)
-      wpmIntervalRef.current = null
-    }
-  }, [targetText])
 
   return {
     typedText,
@@ -151,6 +133,5 @@ export function useTypingMetrics({
     totalKeystrokes,
     isCompleted,
     handleInput,
-    reset,
   }
 }

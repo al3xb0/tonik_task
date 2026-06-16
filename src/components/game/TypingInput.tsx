@@ -61,11 +61,10 @@ export function TypingInput() {
 
   const targetText = currentRound?.sentenceText ?? ''
   const isActive = phase === 'active'
-
-  const { typedText, charStates, wpm, accuracy, isCompleted, handleInput, reset } =
-    useTypingMetrics({ targetText, enabled: isActive })
-
   const roundId = currentRound?.id
+
+  const { typedText, charStates, wpm, accuracy, isCompleted, handleInput } =
+    useTypingMetrics({ targetText, enabled: isActive, roundId })
 
   useEffect(() => {
     if (!roundId) return
@@ -189,8 +188,7 @@ export function TypingInput() {
 
   useEffect(() => {
     resultSavedRef.current = false
-    reset()
-  }, [roundId, reset])
+  }, [roundId])
 
   useEffect(() => {
     if (isActive && textareaRef.current) {
