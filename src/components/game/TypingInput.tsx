@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { acquireRoundChannel, releaseRoundChannel, sendTypingUpdate } from '@/lib/supabase/realtime'
 import { useTypingMetrics } from '@/hooks/useTypingMetrics'
+import type { CharState } from '@/lib/game/metrics'
 import { useGameStore } from '@/stores/gameStore'
 import { usePlayerStore } from '@/stores/playerStore'
 import { toast } from 'sonner'
@@ -43,7 +44,7 @@ function throttle<Args extends unknown[]>(
   return throttled
 }
 
-const charStateClasses: Record<string, string> = {
+const charStateClasses: Record<CharState, string> = {
   correct: 'text-green-600 dark:text-green-400',
   incorrect: 'text-red-500 underline decoration-red-500',
   current: 'border-l-2 border-primary animate-pulse',
