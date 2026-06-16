@@ -18,6 +18,7 @@ import { AuthDialog } from '@/components/auth/AuthDialog'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Footer } from '@/components/Footer'
 
 export function GamePage() {
   const { player, isLoading, isAnonymous, updatePlayerName, signOut } = useAuth()
@@ -154,6 +155,8 @@ export function GamePage() {
             <LeaderboardTable key={`lb-${statsKey}`} />
           </TabsContent>
         </Tabs>
+
+        <Footer />
       </div>
     </motion.div>
   )

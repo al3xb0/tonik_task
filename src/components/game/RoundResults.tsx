@@ -114,7 +114,7 @@ export function RoundResults() {
         <p className="text-center text-muted-foreground text-sm">No results for this round yet.</p>
       )}
 
-      <div className="flex items-end justify-center gap-3 py-4">
+      <div className="flex items-end justify-center gap-2 py-4 sm:gap-3">
         <AnimatePresence>
           {topThree.map((entry, idx) => {
             const isMe = entry.playerId === localPlayer?.id
@@ -166,7 +166,7 @@ export function RoundResults() {
                   initial={{ height: 0 }}
                   animate={{ height: 'auto' }}
                   transition={{ delay: 0.3 + displayOrder * 0.15, duration: 0.4 }}
-                  className={`${podiumHeight} w-24 rounded-t-lg bg-linear-to-b ${podiumColors[idx]} border border-b-0 flex flex-col items-center justify-center gap-1`}
+                  className={`${podiumHeight} w-20 sm:w-24 rounded-t-lg bg-linear-to-b ${podiumColors[idx]} border border-b-0 flex flex-col items-center justify-center gap-1`}
                 >
                   <motion.span
                     initial={{ opacity: 0 }}
