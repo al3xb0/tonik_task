@@ -40,7 +40,6 @@ export function useTypingMetrics({
   const correctCharsRef = useRef(0)
   const [correctChars, setCorrectChars] = useState(0)
   const [totalKeystrokes, setTotalKeystrokes] = useState(0)
-  const wpmIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const isCompleted = typedText.length >= targetText.length && targetText.length > 0
 
@@ -65,24 +64,25 @@ export function useTypingMetrics({
     setWpm(calculateWPM(correctWords, elapsedSeconds))
   }, [targetText, typedText])
 
+  const updateWpmRef = useRef(updateWpm)
+  useEffect(() => {
+    updateWpmRef.current = updateWpm
+  }, [updateWpm])
+
   useEffect(() => {
     startTimeRef.current = null
     totalKeystrokesRef.current = 0
     correctCharsRef.current = 0
   }, [roundId])
 
-  useEffect(() => {
-    if (startTimeRef.current && !isCompleted) {
-      wpmIntervalRef.current = setInterval(updateWpm, 500)
-    }
+  const hasStarted = typedText.length > 0
 
-    return () => {
-      if (wpmIntervalRef.current) {
-        clearInterval(wpmIntervalRef.current)
-        wpmIntervalRef.current = null
-      }
-    }
-  }, [updateWpm, isCompleted])
+  useEffect(() => {
+    if (!hasStarted || isCompleted) return
+
+    const intervalId = setInterval(() => updateWpmRef.current(), 500)
+    return () => clearInterval(intervalId)
+  }, [hasStarted, isCompleted])
 
   const handleInput = useCallback(
     (newText: string) => {
